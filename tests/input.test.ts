@@ -18,23 +18,23 @@ test('one stick tilt moves once and must return to center even after reversing d
 });
 
 test('a held trade button never repeats and must release before firing again', () => {
-  let step = stepPad(initializePad(pad()), pad(0, [0]));
+  let step = stepPad(initializePad(pad()), pad(0, [4]));
   assert.deepEqual(step.actions, ['long']);
-  step = stepPad(step.memory, pad(0, [0])); assert.deepEqual(step.actions, []);
+  step = stepPad(step.memory, pad(0, [4])); assert.deepEqual(step.actions, []);
   step = stepPad(step.memory, pad()); assert.deepEqual(step.actions, []);
-  step = stepPad(step.memory, pad(0, [0])); assert.deepEqual(step.actions, ['long']);
+  step = stepPad(step.memory, pad(0, [4])); assert.deepEqual(step.actions, ['long']);
 });
 
 test('connecting while holding controls does not trade or switch markets', () => {
-  let step = stepPad(initializePad(pad(1, [0, 5, 9])), pad(1, [0, 5, 9]));
+  let step = stepPad(initializePad(pad(1, [4, 5, 9])), pad(1, [4, 5, 9]));
   assert.deepEqual(step.actions, []);
   step = stepPad(step.memory, pad());
-  step = stepPad(step.memory, pad(1, [0]));
+  step = stepPad(step.memory, pad(1, [4]));
   assert.deepEqual(step.actions, ['next', 'long']);
 });
 
-test('standard button map uses A long, X short, B half, Y close, shoulders margin, Start ready', () => {
-  for (const [button, action] of [[0, 'long'], [2, 'short'], [1, 'half'], [3, 'close'], [4, 'marginDown'], [5, 'marginUp'], [9, 'ready']] as const) {
+test('standard button map uses LB long, RB short, B half, Y close, A/X margin, Start ready', () => {
+  for (const [button, action] of [[4, 'long'], [5, 'short'], [1, 'half'], [3, 'close'], [0, 'marginDown'], [2, 'marginUp'], [9, 'ready']] as const) {
     assert.deepEqual(stepPad(initializePad(pad()), pad(0, [button])).actions, [action]);
   }
 });
@@ -211,7 +211,7 @@ test('held A and B cannot activate a new menu or leak a trade when the dialog cl
     frame = stepPad(frame.memory, held, false); assert.deepEqual(frame.actions, []);
     frame = stepPad(frame.memory, pad(), false);
     frame = stepPad(frame.memory, held, false);
-    assert.deepEqual(frame.actions, [button === 0 ? 'long' : 'half']);
+    assert.deepEqual(frame.actions, [button === 0 ? 'marginDown' : 'half']);
   }
 });
 

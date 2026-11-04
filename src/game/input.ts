@@ -104,7 +104,7 @@ export function initializePad(pad: PadSnapshot, menuOpen?: boolean): PadMemory {
 
 /** Edge-triggered controls. A stick sweep through the opposite side is still one tilt. */
 export function stepPad(previous: PadMemory, pad: PadSnapshot, menuOpen?: boolean): { memory: PadMemory; actions: ArenaInput[] } {
-  // A held menu confirmation/back button must not become a long/close-half order
+  // A held menu confirmation/back button must not become an arena action
   // when its dialog closes. Seed from current hardware on either context change.
   if (menuOpen !== undefined && menuOpen !== previous.menuOpen) return { memory: initializePad(pad, menuOpen), actions: [] };
   const buttons = pad.buttons.map(buttonIsDown);
@@ -112,18 +112,22 @@ export function stepPad(previous: PadMemory, pad: PadSnapshot, menuOpen?: boolea
   const actions: ArenaInput[] = [];
   let navigationArmed = previous.navigationArmed;
   if (navigationNeutral(pad)) navigationArmed = true;
-  const navigation = navigationIntent(pad, !(menuOpen ?? previous.menuOpen));
+  const inMenu = menuOpen ?? previous.menuOpen ?? false;
+  const navigation = navigationIntent(pad, !inMenu);
   if (navigationArmed && navigation.active) {
     // Ambiguous opposing inputs consume the tilt without moving a market.
     if (navigation.action) actions.push(navigation.action);
     navigationArmed = false;
   }
-  const tradeButtons: [number, InputAction][] = [[0, 'long'], [2, 'short'], [1, 'half'], [3, 'close']];
+  const tradeButtons: [number, InputAction][] = inMenu
+    ? [[0, 'long'], [1, 'half']]
+    : [[4, 'long'], [5, 'short'], [1, 'half'], [3, 'close']];
   const trades = tradeButtons.filter(([index]) => rising(index));
-  // Do not turn a simultaneous accidental face-button press into opposing fills.
+  // Do not turn a simultaneous shoulder press into opposing fills.
   if (trades.length === 1) actions.push(trades[0][1]);
-  if (rising(4) !== rising(5)) actions.push(rising(4) ? 'marginDown' : 'marginUp');
-  if (rising(9)) actions.push('ready');
+  // A/X take over margin adjustment while LB/RB are used for trading.
+  if (!inMenu && rising(0) !== rising(2)) actions.push(rising(0) ? 'marginDown' : 'marginUp');
+  if (!inMenu && rising(9)) actions.push('ready');
   return { memory: { buttons, navigationArmed, menuOpen: menuOpen ?? previous.menuOpen }, actions };
 }
 
