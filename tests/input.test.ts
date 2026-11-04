@@ -98,14 +98,39 @@ test('connecting with the vertical stick or D-pad held requires release before n
   }
 });
 
-test('a diagonal tilt follows the dominant axis and opposing simultaneous navigation is ignored', () => {
+test('stick diagonals and adjacent D-pad buttons each produce one diagonal move', () => {
   const center = initializePad(pad());
-  assert.deepEqual(stepPad(center, pad(.7, [], .9)).actions, ['down']);
-  assert.deepEqual(stepPad(center, pad(-.9, [], .7)).actions, ['previous']);
-  assert.deepEqual(stepPad(center, pad(.7, [], -.9)).actions, ['up']);
-  assert.deepEqual(stepPad(center, pad(.9, [], .9)).actions, ['next']);
+  for (const [x, y, buttons, direction] of [
+    [-.5, -.5, [12, 14], 'up-left'],
+    [ .5, -.5, [12, 15], 'up-right'],
+    [-.5,  .5, [13, 14], 'down-left'],
+    [ .5,  .5, [13, 15], 'down-right'],
+  ] as const) {
+    for (const input of [pad(x, [], y), pad(0, [...buttons])]) {
+      const step = stepPad(center, input);
+      assert.deepEqual(step.actions, [direction]);
+      assert.deepEqual(stepPad(step.memory, input).actions, []);
+    }
+  }
+  assert.deepEqual(stepPad(center, pad(.8, [], .2)).actions, ['next']);
+  assert.deepEqual(stepPad(center, pad(.3, [], .3)).actions, []);
   assert.deepEqual(stepPad(center, pad(0, [12, 13])).actions, []);
   assert.deepEqual(stepPad(center, pad(.9, [14])).actions, []);
+  const menu = initializePad(pad(), true);
+  assert.deepEqual(stepPad(menu, pad(.7, [], .9), true).actions, ['down']);
+  assert.deepEqual(stepPad(menu, pad(0, [13, 15]), true).actions, []);
+});
+
+test('diagonal moves advance both grid axes and wrap at the edges', () => {
+  assert.equal(navigateMarket(1, 'down-left', 6, 3), 3);
+  assert.equal(navigateMarket(1, 'down-right', 6, 3), 5);
+  assert.equal(navigateMarket(4, 'up-left', 6, 3), 0);
+  assert.equal(navigateMarket(4, 'up-right', 6, 3), 2);
+  assert.equal(navigateMarket(5, 'down-right', 6, 3), 0);
+  assert.equal(navigateMarket(0, 'up-left', 6, 3), 5);
+  assert.equal(navigateMarket(0, 'down-right', 6, 2), 3);
+  assert.equal(navigateMarket(1, 'down-right', 6, 1), 2);
+  assert.equal(navigateMarket(1, 'down-right', 5, 3), 1);
 });
 
 test('grid navigation follows desktop and mobile columns while preserving horizontal wrap', () => {

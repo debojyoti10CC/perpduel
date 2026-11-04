@@ -8,12 +8,30 @@ import { DEFAULT_ROUND_SECONDS, isRoundDuration } from '../shared/types.ts';
 
 const ASSETS = ['MON', 'SOL', 'ETH'];
 const INITIAL_DUELS = [
-  { id: 'd1', address: '0x33a9…8f2e', asset: 'MON', amount: 10, duration: '5 min', side: 'long', avatar: 0, wins: 72 },
-  { id: 'd2', address: '0x97c2…1a4d', asset: 'SOL', amount: 0.03, duration: '3 min', side: 'short', avatar: 1, wins: 68 },
-  { id: 'd3', address: '0x44b8…9c7f', asset: 'MON', amount: 25, duration: '5 min', side: 'short', avatar: 2, wins: 81 },
-  { id: 'd4', address: '0x82e1…3b6a', asset: 'ETH', amount: 0.003, duration: '2 min', side: 'long', avatar: 3, wins: 64 },
-  { id: 'd5', address: '0x6f09…2d8c', asset: 'SOL', amount: 0.7, duration: '4 min', side: 'long', avatar: 4, wins: 76 },
+  { id: 'd1', address: '0x33a9…8f2e', asset: 'MON', amount: 10, duration: '5 min', wins: 72 },
+  { id: 'd2', address: '0x97c2…1a4d', asset: 'SOL', amount: 0.03, duration: '3 min', wins: 68 },
+  { id: 'd3', address: '0x44b8…9c7f', asset: 'MON', amount: 25, duration: '5 min', wins: 81 },
+  { id: 'd4', address: '0x82e1…3b6a', asset: 'ETH', amount: 0.003, duration: '2 min', wins: 64 },
+  { id: 'd5', address: '0x6f09…2d8c', asset: 'SOL', amount: 0.7, duration: '4 min', wins: 76 },
 ];
+const DUEL_PHASE_LABELS = {
+  registering: 'Setting up',
+  countdown: 'Starting soon',
+  active: 'In progress',
+  settling: 'Settling',
+  finished: 'Finished',
+  void: 'Voided',
+};
+
+function duelStatus(room) {
+  if (room.preview) return 'Sample listing';
+  if (room.phase !== 'lobby') return DUEL_PHASE_LABELS[room.phase] ?? 'Room';
+  if (room.funding && (!room.funding.hostFunded || (room.funding.guestAddress && !room.funding.guestFunded))) {
+    return 'Awaiting deposit';
+  }
+  if (room.players < 2) return room.current ? 'Waiting for opponent' : 'Open seat';
+  return 'Waiting for ready';
+}
 const round = n => Number(n.toFixed(6));
 const formatRound = (seconds = DEFAULT_ROUND_SECONDS) => `${seconds / 60} min`;
 const formatAmount = n => new Intl.NumberFormat('en-US', { maximumFractionDigits: 6 }).format(n);
@@ -226,8 +244,8 @@ export default function App({ initialSession }) {
   const practice = () => { window.open(`/?practice=1&roundSeconds=${practiceRoundSeconds}`, '_blank', 'noopener,noreferrer'); };
   const copy = async text => { try { await navigator.clipboard.writeText(text); notify('Copied to clipboard.'); } catch { setError('Clipboard unavailable. Select and copy the room code.'); } };
   const handleTabKey = event => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return; event.preventDefault(); const next = event.key === 'Home' ? 'open' : event.key === 'End' ? 'mine' : tab === 'open' ? 'mine' : 'open'; setTab(next); document.getElementById(`${next}-tab`)?.focus(); };
-  const ownRoom = state ? { id: state.id, code: state.code, host: state.players[0].name, mode: state.mode, phase: state.phase, players: state.players.filter(p => p.connected).length, stake: state.stake, current: true, live: true, address: state.players[0].name, asset: state.stake?.asset || 'MON', amount: state.stake?.amount || 0, duration: formatRound(state.roundSeconds), side: 'long', avatarSeed: state.funding?.hostAddress || walletAddress || state.players[0].name } : null;
-  const publicRows = rooms.map((room, index) => ({ ...room, live: true, address: room.host, asset: room.stake?.asset || 'MON', amount: room.stake?.amount || 0, duration: formatRound(room.roundSeconds), side: index % 2 ? 'short' : 'long', avatarSeed: room.funding?.hostAddress || room.host, wins: null }));
+  const ownRoom = state ? { id: state.id, code: state.code, host: state.players[0].name, mode: state.mode, phase: state.phase, players: state.players.filter(p => p.connected).length, stake: state.stake, funding: state.funding, current: true, live: true, address: state.players[0].name, asset: state.stake?.asset || 'MON', amount: state.stake?.amount || 0, duration: formatRound(state.roundSeconds), avatarSeed: state.funding?.hostAddress || walletAddress || state.players[0].name } : null;
+  const publicRows = rooms.map(room => ({ ...room, live: true, address: room.host, asset: room.stake?.asset || 'MON', amount: room.stake?.amount || 0, duration: formatRound(room.roundSeconds), avatarSeed: room.funding?.hostAddress || room.host }));
   const previewRows = INITIAL_DUELS.map(profile => ({ ...profile, preview: true, avatarSeed: profile.address }));
   const listing = tab === 'mine' ? ownRoom ? [ownRoom] : [] : [...publicRows, ...previewRows];
   const funding = state?.funding;
@@ -245,8 +263,8 @@ export default function App({ initialSession }) {
         <output className="deposit-usd" aria-label="Estimated dollar reference" title="Mainnet token reference price only. Testnet MON has no monetary value.">{usdValue}</output><AssetSelect asset={asset} onChange={setAsset} /><button className="deposit-submit" type="submit" aria-label="Create a staked room"><Icon name="arrow" size={27} /></button>
       </form><p className={`deposit-help ${error && !modal ? 'error' : ''}`} id="deposit-help" role="status">{error && !modal ? error : <>Monad testnet<span className="help-dot">·</span>Your stake stays in escrow until the result.</>}</p></section>
       <section className="lobby content-width" aria-labelledby="duels-title"><div className="lobby-toolbar"><div className="tabs" role="tablist" aria-label="Duel lists"><button id="open-tab" role="tab" aria-selected={tab === 'open'} aria-controls="duel-panel" tabIndex={tab === 'open' ? 0 : -1} onKeyDown={handleTabKey} className={tab === 'open' ? 'active' : ''} onClick={() => setTab('open')}>Open duels <span>{rooms.length + INITIAL_DUELS.length}</span></button><button id="mine-tab" role="tab" aria-selected={tab === 'mine'} aria-controls="duel-panel" tabIndex={tab === 'mine' ? 0 : -1} onKeyDown={handleTabKey} className={tab === 'mine' ? 'active' : ''} onClick={() => setTab('mine')}>My duels {ownRoom && <span>1</span>}</button></div><div className="lobby-actions"><button className="join-room-button" onClick={openRoomJoin}><Icon name="plus" size={15} />Join room</button><button className="create-button" onClick={beginCreate}><Icon name="plus" size={17} />Create duel</button></div></div>
-        <div className="duel-panel" id="duel-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}><div className="table-toolbar"><h2 id="duels-title"><span className={`live-dot ${connected ? '' : 'offline'}`} />{tab === 'open' ? 'Find your next opponent' : 'Your rooms'}</h2><span className="network-caption">MONAD TESTNET <span>·</span> LIVE ROOMS + TRADER PREVIEWS</span></div><div className="duel-head"><span>Trader</span><span>Entry stake</span><span>Position</span><span>Duration</span><span className="right-align">Prize pool</span><span /></div>
-        <div className="duel-rows">{listing.map(room => <div className={`duel-row ${room.preview ? 'preview-row' : ''}`} key={room.id}><div className="trader"><Avatar seed={room.avatarSeed} /><div><span className="trader-address">{room.address || room.host}</span><span className="trader-meta">{room.preview ? <>{room.wins}% win rate <span className="preview-tag">PREVIEW</span></> : room.current ? 'Your room' : `Room ${room.code}`}</span></div></div><div className="stake-cell"><Token asset={room.asset || 'MON'} size={23} /><span>{formatAmount(room.amount)} <span className="currency-label">{room.preview ? room.asset : 'test MON'}</span></span></div><div className="position-cell"><span className={`position ${room.side || 'long'}`}>{room.side === 'short' ? '↘ Short' : '↗ Long'}</span><span className="versus">vs</span><span className="open-position">?</span></div><div className="duration-cell"><Icon name="time" size={14} /><span>{room.duration}</span></div><div className="prize-cell">{formatAmount(round(room.amount * 2))}<span>{room.asset || 'MON'}</span></div><button className="join-button" onClick={() => room.live ? chooseRoom(room) : chooseProfile(room)}>{room.current && state?.code === room.code ? 'Open room' : 'Join duel'}</button></div>)}</div>
+        <div className="duel-panel" id="duel-panel" role="tabpanel" aria-labelledby={`${tab}-tab`}><div className="table-toolbar"><h2 id="duels-title"><span className={`live-dot ${connected ? '' : 'offline'}`} />{tab === 'open' ? 'Find your next opponent' : 'Your rooms'}</h2><span className="network-caption">MONAD TESTNET <span>·</span> LIVE ROOMS + TRADER PREVIEWS</span></div><div className="duel-head"><span>Trader</span><span>Entry stake</span><span>Status</span><span>Duration</span><span className="right-align">Prize pool</span><span /></div>
+        <div className="duel-rows">{listing.map(room => <div className={`duel-row ${room.preview ? 'preview-row' : ''}`} key={room.id}><div className="trader"><Avatar seed={room.avatarSeed} /><div><span className="trader-address">{room.address || room.host}</span><span className="trader-meta">{room.preview ? <>{room.wins}% win rate <span className="preview-tag">PREVIEW</span></> : room.current ? 'Your room' : `Room ${room.code}`}</span></div></div><div className="stake-cell"><Token asset={room.asset || 'MON'} size={23} /><span>{formatAmount(room.amount)} <span className="currency-label">{room.preview ? room.asset : 'test MON'}</span></span></div><div className="duel-status-cell"><span className={`duel-status-badge${!room.preview && !room.current ? ' is-open' : ''}`}>{duelStatus(room)}</span></div><div className="duration-cell"><Icon name="time" size={14} /><span>{room.duration}</span></div><div className="prize-cell">{formatAmount(round(room.amount * 2))}<span>{room.asset || 'MON'}</span></div><button className="join-button" onClick={() => room.live ? chooseRoom(room) : chooseProfile(room)}>{room.current && state?.code === room.code ? 'Open room' : room.preview ? 'Preview duel' : 'Join duel'}</button></div>)}</div>
         {!listing.length && <div className="empty-state room-empty"><BrandMark size={35} /><h3>{roomsError || (tab === 'mine' ? 'Your next duel starts here.' : 'The arena is open.')}</h3><p>{tab === 'mine' ? 'Create a room or join a friend using their room code.' : 'No public rooms yet. Create one, or join a friend by code.'}</p><div className="empty-actions"><button className="black-button" onClick={() => openModal('join')}>Join a room<Icon name="arrow" size={16} /></button><button className="practice-link" onClick={practice}>Try a practice bot</button></div></div>}
         <div className="table-footer"><span>Two traders. Equal stakes. One winner.</span><span><span className="mini-dot" />Test MON · no cash value</span></div></div>
       </section>

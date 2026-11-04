@@ -220,7 +220,7 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena button:focus-visible,.dark-arena a:focus-visible,.dark-arena input:focus-visible,.dark-arena select:focus-visible,.dark-arena .controller-menu-focus{outline:2px solid #d4a1f4!important;outline-offset:3px}
 @media(max-width:1150px){.dark-arena .arena-lobby-link{font-size:0;padding:7px}.arena-stake-summary>span{display:none}.dark-arena .arena-brand>span{font-size:19px}.dark-arena .scoreboard{height:76px}}
 @media(max-width:850px){.dark-arena .topbar{gap:8px;padding-inline:12px}.dark-arena .topbar nav{gap:2px}.dark-arena .topbar-tools{gap:4px}.dark-arena .arena-brand>span{font-size:18px;letter-spacing:-.8px}.dark-arena .arena-brand>svg{width:24px;height:24px}.arena-stake-summary{margin-left:5px;gap:5px}.arena-stake-summary>b{font-size:10px}.dark-arena .paper-game-notice>span{gap:4px}.dark-arena .paper-game-notice strong{font-size:9px}}
-@media(max-width:700px){.dark-arena .scoreboard{height:71px;gap:5px}.dark-arena .arena-brand{gap:6px}.dark-arena .arena-brand>span{font-size:16px;letter-spacing:-.7px}.dark-arena .arena-brand>svg{width:22px;height:22px}.dark-arena .topbar nav .nav-item{padding:5px}.dark-arena .topbar-tools .icon-button{width:25px;height:27px}.dark-arena .header-search-trigger{width:27px;min-width:27px}.dark-arena .count-bubble{font-size:7px}.dark-arena .paper-game-notice{min-height:26px}.dark-arena .paper-game-notice strong{display:none}.dark-arena .arena-stake-summary>b{font-size:10px}.dark-arena .arena-stake-summary>small{font-size:6px}.dark-arena .paper-game-notice>span{font-size:9px}.dark-arena .paper-game-notice button{max-width:130px;white-space:nowrap;font-size:8px}.dark-arena .match-topline{font-size:8px}.dark-arena .match-topline>span{gap:5px}.dark-arena .match-topline .text-button{font-size:8px}.dark-arena .room-code{letter-spacing:.7px}.dark-arena .player-card{padding:5px 7px}.dark-arena .player-name{font-size:10px}.dark-arena .player-balance strong{font-size:20px}.dark-arena .player-card-top{max-width:100%}.dark-arena .clock-number{font-size:26px}.dark-arena .markets-section{gap:6px}.dark-arena .trade-dock{border-radius:11px}.arena-result-stake{padding:13px;gap:10px}.arena-result-stake>strong{font-size:18px}.arena-result-stake>p{font-size:11px}.dark-arena .arena-welcome h1{font-size:22px}}
+@media(max-width:700px){.dark-arena .scoreboard{height:71px;gap:5px}.dark-arena .arena-brand{gap:6px}.dark-arena .arena-brand>span{font-size:16px;letter-spacing:-.7px}.dark-arena .arena-brand>svg{width:22px;height:22px}.dark-arena .topbar nav .nav-item{padding:5px}.dark-arena .topbar-tools .icon-button{width:25px;height:27px}.dark-arena .header-search-trigger{width:27px;min-width:27px}.dark-arena .count-bubble{font-size:7px}.dark-arena .paper-game-notice{min-height:26px}.dark-arena .paper-game-notice strong{display:none}.dark-arena .arena-stake-summary>b{font-size:10px}.dark-arena .arena-stake-summary>small{font-size:6px}.dark-arena .paper-game-notice>span{font-size:9px}.dark-arena .paper-game-notice button{max-width:130px;white-space:nowrap;font-size:8px}.dark-arena .match-topline{font-size:8px}.dark-arena .match-topline>span{gap:5px}.dark-arena .match-topline .text-button{font-size:8px}.dark-arena .room-code{letter-spacing:.7px}.dark-arena .player-card{padding:5px 7px}.dark-arena .player-name{font-size:10px}.dark-arena .player-balance strong{font-size:20px}.dark-arena .player-card-top{max-width:100%}.dark-arena .markets-section{gap:6px}.dark-arena .trade-dock{border-radius:11px}.arena-result-stake{padding:13px;gap:10px}.arena-result-stake>strong{font-size:18px}.arena-result-stake>p{font-size:11px}.dark-arena .arena-welcome h1{font-size:22px}}
 @media(max-width:390px){.dark-arena .topbar nav .nav-item:first-child{display:none}.dark-arena .topbar{gap:5px}.dark-arena .header-right{gap:5px}.dark-arena .topbar-tools{gap:1px}.dark-arena .fullscreen-button{display:none}.dark-arena .match-topline>button{font-size:0}.dark-arena .player-balance strong{font-size:18px}}
 @media(prefers-reduced-motion:reduce){.dark-arena *,.dark-arena *::before,.dark-arena *::after{animation:none!important;transition:none!important}}
 
@@ -231,6 +231,9 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena .market-card,.dark-arena .trade-dock,.dark-arena .player-card,.dark-arena .player-card.player-0,.dark-arena .player-card.player-1{background:#1a1a1a;border-color:#303030;box-shadow:none}
 .dark-arena .market-card:hover,.dark-arena .trade-dock.active-dock{border-color:#4a4a4a}
 .dark-arena .clock-card{background:#161616;border-color:#3b2c43;box-shadow:none}
+.dark-arena .clock-top { color: #c4b5d0; }
+.dark-arena .clock-top > .clock-duration { background: #2b2430; color: #dacbe3; }
+.dark-arena .clock-phase { color: #b5aaba; }
 .dark-arena .market-view-toggle,.dark-arena .timeframes{background:#161616;border-color:#303030}
 .dark-arena .market-view-toggle button.selected,.dark-arena .timeframes button.selected{background:#e2a9f1;color:#201526}
 .dark-arena .market-card.selected-p1{border-color:#34d399;background:#1a1a1a;box-shadow:inset 3px 0 #34d399}
@@ -244,9 +247,9 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena .market-card-footer{border-color:#303030}
 .dark-arena .positive{color:#34d399}
 .dark-arena .player-avatar.identicon{background:transparent;border:0;padding:0;overflow:hidden;border-radius:50%;box-shadow:none}
-@media(min-width:1100px){.dark-arena .market-chart{min-height:132px}.dark-arena .market-card-footer{font-size:10px}.dark-arena .market-price-row>strong{font-size:27px}.dark-arena .clock-number{font-weight:500}}
+@media(min-width:1100px){.dark-arena .market-chart{min-height:132px}.dark-arena .market-card-footer{font-size:10px}.dark-arena .market-price-row>strong{font-size:27px}}
 
-.dark-arena .arena-result-dialog {
+.dark-arena :is(.arena-result-dialog, .arena-history-dialog) {
   width: 680px;
   max-height: calc(100dvh - 32px);
   padding: clamp(14px, 3vw, 24px);
@@ -257,8 +260,8 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
   scrollbar-width: thin;
   scrollbar-color: #56565e #18181b;
 }
-.arena-result-dialog .modal-header { margin-bottom: 16px; gap: 12px; }
-.dark-arena .arena-result-dialog h2 {
+:is(.arena-result-dialog, .arena-history-dialog) .modal-header { margin-bottom: 16px; gap: 12px; }
+.dark-arena :is(.arena-result-dialog, .arena-history-dialog) h2 {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -266,7 +269,7 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
   font-size: clamp(21px, 3vw, 26px);
   line-height: 1.2;
 }
-.arena-result-dialog .result-heading-icon {
+:is(.arena-result-dialog, .arena-history-dialog) .result-heading-icon {
   display: grid;
   flex: 0 0 36px;
   height: 36px;
@@ -276,15 +279,15 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
   color: #e2a9f1;
 }
 .dark-arena .arena-result-dialog .modal-header p,
-.dark-arena .arena-result-dialog .controller-dialog-hint {
+.dark-arena :is(.arena-result-dialog, .arena-history-dialog) .controller-dialog-hint {
   margin: 7px 0 0;
   color: #b4b4bc;
   font-size: 12px;
   line-height: 1.5;
 }
-.dark-arena .arena-result-dialog .controller-dialog-hint { font-size: 10px; }
-.dark-arena .arena-result-dialog .modal-close { background: #29292d; color: #d4d4d8; border-color: #414147; }
-.dark-arena .arena-result-dialog .modal-close:hover { background: #38383e; color: #fff; }
+.dark-arena :is(.arena-result-dialog, .arena-history-dialog) .controller-dialog-hint { font-size: 10px; }
+.dark-arena :is(.arena-result-dialog, .arena-history-dialog) .modal-close { background: #29292d; color: #d4d4d8; border-color: #414147; }
+.dark-arena :is(.arena-result-dialog, .arena-history-dialog) .modal-close:hover { background: #38383e; color: #fff; }
 .arena-result-dialog .result-grid { gap: 10px; }
 .dark-arena .arena-result-dialog .result-player {
   min-width: 0;
@@ -315,4 +318,75 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 
 @media (max-width: 420px) {
   .arena-result-dialog .result-breakdown > div { flex-wrap: wrap; }
+}
+
+.arena-history-dialog .history-list {
+  gap: 8px;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  overflow: visible;
+  list-style: none;
+}
+.dark-arena .arena-history-dialog .history-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: 12px;
+  padding: 11px;
+  border-color: #39393e;
+  border-radius: 12px;
+  background: #232326;
+}
+.dark-arena .arena-history-dialog .history-icon {
+  width: 34px;
+  height: 34px;
+  border-color: #414147;
+  border-radius: 8px;
+  background: #29292d;
+  color: #d8c0ea;
+}
+.dark-arena .arena-history-dialog .history-match h3 {
+  color: #f4f4f5;
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.arena-history-dialog .history-match h3 span { color: #b4b4bc; font-weight: 400; }
+.arena-history-dialog .history-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 5px;
+  color: #b4b4bc;
+  font-size: 10px;
+}
+.arena-history-dialog .history-outcome {
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: #323236;
+  color: #d4d4d8;
+  overflow-wrap: anywhere;
+}
+.arena-history-dialog .history-outcome.is-decided { background: #34293d; color: #e6c6f1; }
+.arena-history-dialog .history-scores { gap: 6px; margin: 0; font-size: 12px; }
+.arena-history-dialog .history-scores b { color: #f4f4f5; }
+.arena-history-dialog .history-scores span { color: #b4b4bc; }
+.dark-arena .arena-history-dialog .history-export {
+  width: 34px;
+  height: 34px;
+  border: 1px solid #414147;
+  border-radius: 8px;
+  background: #29292d;
+  color: #d4d4d8;
+}
+.dark-arena .arena-history-dialog .history-export:hover { background: #38383e; color: #fff; }
+.arena-history-dialog .empty-history { gap: 10px; padding: 28px 14px; color: #b4b4bc; }
+.arena-history-dialog .empty-history h3 { color: #f4f4f5; font-size: 14px; }
+
+@media (max-width: 480px) {
+  .dark-arena .arena-history-dialog .history-item { grid-template-columns: auto minmax(0, 1fr) auto; gap: 6px 8px; }
+  .arena-history-dialog .history-icon, .arena-history-dialog .history-export { grid-row: 1 / 3; }
+  .arena-history-dialog .history-export { grid-column: 3; }
+  .arena-history-dialog .history-scores { grid-column: 2; }
 }

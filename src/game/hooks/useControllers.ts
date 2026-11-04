@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { InputAction } from '../../../shared/types';
-import { HAPTIC_PATTERNS, SCROLL_SPEED, controllerScrollPixels, initializePad, inputTargetIsEditable, keyboardAction, menuActionForInput, stepPad, type FeedbackKind, type MenuAction, type PadMemory } from '../input';
+import { HAPTIC_PATTERNS, SCROLL_SPEED, controllerScrollPixels, initializePad, inputTargetIsEditable, keyboardAction, menuActionForInput, stepPad, type ArenaInput, type FeedbackKind, type MenuAction, type PadMemory } from '../input';
 import { playFeedback, unlockAudio } from '../sound';
 
 export interface ControllerStatus {
@@ -16,11 +15,11 @@ export interface ControllerStatus {
   haptics: boolean;
 }
 
-export interface LastInput { seat: number; action: InputAction; source: 'keyboard' | 'gamepad'; at: number }
+export interface LastInput { seat: number; action: ArenaInput; source: 'keyboard' | 'gamepad'; at: number }
 export interface ControllerOptions {
   enabled: boolean;
   seats: number[];
-  onAction: (seat: number, action: InputAction) => void;
+  onAction: (seat: number, action: ArenaInput) => void;
   onScroll?: (pixels: number) => void;
   menuOpen?: boolean;
   onMenuAction?: (action: MenuAction) => void;
@@ -86,7 +85,7 @@ export function useControllers(options: ControllerOptions) {
     let lastPoll = 0;
     let previousView = '';
     const pressedKeys = new Set<string>();
-    const emit = (seat: number, action: InputAction, source: LastInput['source']) => {
+    const emit = (seat: number, action: ArenaInput, source: LastInput['source']) => {
       if (!settings.current.enabled || settings.current.menuOpen || !settings.current.seats.includes(seat) || document.visibilityState === 'hidden' || !document.hasFocus()) return;
       setLastInput({ seat, action, source, at: Date.now() });
       settings.current.onAction(seat, action);

@@ -3,13 +3,14 @@ import { ArrowDown, ArrowUp, ArrowUpDown, ArrowUpRight } from 'lucide-react';
 import { COINS, type Coin, type Market, type Player } from '../../../shared/types';
 import { compact, names, price } from '../lib';
 import CoinIcon from './CoinIcon';
+import MarketPositionMarkers, { marketPositionLabel, type PositionsByMarket } from './MarketPositionMarkers';
 import { MarketSparkline } from './MarketHighlights';
 import { dayTrend, dayTrendScale } from '../marketHistory';
 
 type SortKey = 'name' | 'price' | 'change' | 'volume';
-interface Props { markets: Market[]; players?: Player[]; onSelect: (coin: Coin) => void; now: number }
+interface Props { markets: Market[]; players?: Player[]; positionsByMarket?: PositionsByMarket; onSelect: (coin: Coin) => void; now: number }
 
-export default function MarketTable({ markets, players = [], onSelect, now }: Props) {
+export default function MarketTable({ markets, players = [], positionsByMarket = {}, onSelect, now }: Props) {
   const [sort, setSort] = useState<{ key: SortKey; direction: 'asc' | 'desc' } | null>(null);
   const trends = new Map(markets.map(market => [market.coin, dayTrend(market, now)]));
   const scale = dayTrendScale([...trends.values()]);
@@ -34,8 +35,18 @@ export default function MarketTable({ markets, players = [], onSelect, now }: Pr
   return <div className="token-market-table table-scroll"><table aria-label="Live perpetual market list"><thead><tr>{header('name', 'Market name')}{header('price', 'Mark price')}{header('change', '24h')}<th scope="col" title={`Native 15-minute samples from each coin's last 24 hours. All rows use the same ±${scale}% scale; dashed line is 0%.`}>24h trend <small>same % scale</small></th>{header('volume', '24h volume')}<th scope="col">Players / feed</th></tr></thead><tbody>{rows.map(({ coin, market }) => {
     const fresh = Boolean(market?.available && market.time <= now && now - market.time <= 5000);
     const selected = players.flatMap((player, seat) => player.selected === COINS.indexOf(coin) ? [seat] : []);
+    const positions = positionsByMarket[coin] ?? [];
     return <tr key={coin} data-market={coin} className={`${selected.includes(0) ? 'token-row-p1 ' : ''}${selected.includes(1) ? 'token-row-p2' : ''}`}>
-      <td><button className="token-name-cell" type="button" onClick={() => onSelect(coin)} aria-label={`View ${names[coin]} market`}><CoinIcon coin={coin}/><span><strong className="token-market-name">{names[coin]}</strong><small className="token-market-symbol">${coin} <span>PERP</span></small></span></button></td>
+      <td><button className="token-name-cell" type="button" onClick={() => onSelect(coin)} aria-label={marketPositionLabel(`View ${names[coin]} market`, positions)}>
+        <CoinIcon coin={coin} />
+        <span>
+          <span className="market-symbol-line">
+            <strong className="token-market-name">{names[coin]}</strong>
+            <MarketPositionMarkers positions={positions} />
+          </span>
+          <small className="token-market-symbol">${coin} <span>PERP</span></small>
+        </span>
+      </button></td>
       <td className={`token-price-cell${fresh ? '' : ' token-price-stale'}`}>{price(market?.mark ?? 0)}</td>
       <td><span className={`token-change${fresh ? (market!.change24h >= 0 ? ' positive' : ' negative') : ''}`}>{fresh ? <>{market!.change24h >= 0 ? '▴' : '▾'} {Math.abs(market!.change24h).toFixed(2)}%</> : '—'}</span></td>
       <td className="token-trend"><MarketSparkline trend={trends.get(coin) ?? {coin,start:now/1000-86400,end:now/1000,points:[]}} scale={scale}/></td>
