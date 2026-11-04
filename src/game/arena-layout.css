@@ -1,0 +1,227 @@
+/* One viewport for play; supporting detail lives in dialogs. */
+.market-chart { position: relative; overflow: hidden; }
+.chart-warming { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 11px; background: #fff; }
+.compact-arena .brand { padding-bottom: 0; }
+.compact-arena { height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+.compact-arena .topbar { flex: none; min-height: 56px; height: 56px; padding: 6px 20px; }
+.compact-arena main { display: flex; flex: 1; flex-direction: column; gap: 8px; min-height: 0; width: 100%; max-width: 1800px; padding: 10px 20px 6px; }
+.compact-arena main::before, .compact-arena main::after { width: 7px; }
+.compact-arena .paper-game-notice { flex: none; min-height: 26px; margin: 0; padding: 4px 10px; border-radius: 8px; font-size: 10px; line-height: 1.4; }
+.compact-arena .paper-game-notice button { font-size: 10px; max-width: none; }
+.arena-welcome { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex: none; min-height: 62px; }
+.arena-welcome h1 { font-size: 28px; letter-spacing: -.7px; line-height: 1.15; font-weight: 500; }
+.arena-welcome p { margin-top: 5px; color: var(--muted); font-size: 12px; }
+.arena-start-actions { display: flex; gap: 8px; }
+.arena-start-actions .button { min-height: 38px; padding: 8px 16px; }
+.compact-arena .match-topline { flex: none; min-height: 18px; margin: 0; font-size: 9px; }
+.compact-arena .match-topline .text-button { font-size: 10px; }
+.compact-arena .room-code { padding: 2px 6px; }
+.compact-arena .scoreboard { flex: none; height: 72px; margin: 0; grid-template-columns: minmax(0,1fr) 130px minmax(0,1fr); gap: 10px; }
+.compact-arena .player-card { min-height: 0; padding: 8px 12px; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 1fr auto; column-gap: 8px; row-gap: 5px; border-radius: 14px; }
+.compact-arena .player-card-top { grid-column: 1; grid-row: 1; gap: 6px; margin: 0; }
+.compact-arena .player-identity { min-width: 0; gap: 7px; }
+.compact-arena .player-avatar { width: 25px; height: 25px; font-size: 10px; border-radius: 8px; }
+.compact-arena .player-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
+.compact-arena .player-status { margin-top: 3px; font-size: 9px; }
+.compact-arena .player-card-top .status-tag { font-size: 8px; padding: 3px 5px; }
+.compact-arena .player-balance { grid-column: 2; grid-row: 1; display: flex; gap: 8px; margin: 0; align-items: center; }
+.compact-arena .player-balance .label { font-size: 8px; margin-bottom: 2px; }
+.compact-arena .player-balance strong { font-size: 23px; letter-spacing: -.6px; line-height: 1.05; }
+.compact-arena .pnl-badge { font-size: 9px; padding: 3px 5px; }
+.compact-arena .player-metrics { grid-column: 1 / -1; grid-row: 2; display: flex; justify-content: space-between; gap: 10px; padding: 0; margin: 0; border: 0; }
+.compact-arena .player-metrics > div { display: flex; flex-direction: row; align-items: baseline; gap: 5px; }
+.compact-arena .player-metrics span { font-size: 9px; }
+.compact-arena .player-metrics b { font-size: 10px; margin: 0; }
+.compact-arena .clock-card { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; padding: 4px 8px; border-radius: 14px; }
+.compact-arena .clock-top { font-size: 8px; margin: 0; width: 100%; }
+.compact-arena .clock-number { font-size: 30px; line-height: 1; letter-spacing: -1px; margin: 0; }
+.compact-arena .clock-phase { font-size: 9px; line-height: 1.15; }
+.compact-arena .clock-track { display: none; }
+.compact-arena .lobby-banner:not(.result-banner) { display: none; }
+.compact-arena .result-banner, .compact-arena .status-banner { flex: none; min-height: 28px; padding: 4px 10px; margin: 0; font-size: 10px; border-radius: 8px; }
+.compact-arena .result-banner > div > span { display: none; }
+.compact-arena .result-banner .button { min-height: 24px; padding: 3px 9px; font-size: 10px; }
+.compact-arena .markets-section { display: flex; flex: 1; flex-direction: column; min-height: 0; gap: 8px; }
+.compact-arena .section-heading { flex: none; height: 30px; min-height: 30px; margin: 0; gap: 12px; }
+.compact-arena .section-title h2 { font-size: 16px; letter-spacing: -.4px; }
+.compact-arena .chart-toolbar { gap: 10px; }
+.compact-arena .market-view-toggle, .compact-arena .timeframes { padding: 2px; gap: 2px; }
+.compact-arena .market-view-toggle button, .compact-arena .timeframes button { min-height: 24px; padding: 2px 8px; font-size: 10px; }
+.compact-arena .market-grid { display: grid; flex: 1; min-height: 0; grid-template-columns: repeat(3,minmax(0,1fr)); grid-template-rows: repeat(2,minmax(0,1fr)); gap: 10px; }
+.compact-arena .market-card { display: flex; flex-direction: column; min-height: 0; border-radius: 14px; }
+.compact-arena .market-card-header { flex: none; min-height: 31px; padding: 5px 10px 0; gap: 5px; }
+.compact-arena .coin-title { gap: 6px; }
+.compact-arena .coin-title .coin-icon { width: 24px; height: 24px; font-size: 15px; }
+.compact-arena .coin-title strong { font-size: 12px; }
+.compact-arena .coin-title small { display: none; }
+.compact-arena .market-change { font-size: 10px; }
+.compact-arena .expand-chart-button { min-width: 24px; min-height: 24px; width: 24px; height: 24px; }
+.compact-arena .market-price-row { flex: none; min-height: 31px; padding: 1px 10px 2px; }
+.compact-arena .market-price-row > strong { font-size: 23px; letter-spacing: -.5px; line-height: 1.15; }
+.compact-arena .market-grid .market-chart, .compact-arena .market-grid .chart-empty { flex: 1; height: auto; min-height: 0; overflow: hidden; }
+.compact-arena .market-card-footer { flex: none; min-height: 16px; height: 16px; margin: 0 10px; font-size: 8px; }
+.compact-arena .market-card-footer b, .compact-arena .market-card-footer > span:last-child { font-size: 8px; }
+.compact-arena .market-card-footer .selection-pill { display: none; }
+.market-ownership { display: flex; justify-content: flex-end; align-items: center; flex-wrap: wrap; gap: 4px; margin-left: 8px; }
+.market-selection-badge { display: inline-flex; align-items: center; min-height: 20px; padding: 3px 6px; font-size: 9px; font-weight: 700; letter-spacing: .25px; border-radius: 6px; border: 1px solid currentColor; white-space: nowrap; }
+.market-selection-badge.p1 { background: #e7efff; color: #245ee5; }
+.market-selection-badge.p2 { background: #f2e8ff; color: #913ae0; }
+.compact-arena .quote-status { font-size: 8px; }
+.compact-arena .market-card {
+  transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
+}
+.market-selection-badge { animation: selection-label 140ms ease-out; }
+@keyframes selection-label { from { opacity: 0; } to { opacity: 1; } }
+.compact-arena .trading-docks { flex: none; height: 96px; gap: 10px; margin: 0; }
+.compact-arena .trade-dock { padding: 7px 10px; min-height: 0; border-radius: 14px; }
+.compact-arena .dock-top { height: 22px; gap: 6px; margin-bottom: 4px; }
+.compact-arena .margin-control { gap: 5px; }
+.compact-arena .trade-buttons { gap: 6px; }
+.compact-arena .trade-button { min-height: 28px; padding: 4px 7px; font-size: 11px; gap: 5px; }
+.compact-arena .dock-bottom { min-height: 20px; margin-top: 4px; gap: 6px; }
+.compact-arena .dock-bottom > span { font-size: 9px; }
+.compact-arena .ready-button { min-height: 22px; padding: 4px 10px; font-size: 10px; }
+.arena-utility-bar { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; height: 24px; color: var(--muted); font-size: 9px; }
+.arena-utility-bar > div { display: flex; align-items: center; gap: 10px; }
+.arena-utility-bar button { display: flex; align-items: center; gap: 5px; background: var(--wash); padding: 4px 9px; border-radius: 6px; font-size: 10px; }
+.arena-utility-bar a { font-size: 9px; }
+.arena-utility-bar a:hover { text-decoration: underline; }
+.compact-arena .feed-warning { flex: none; margin: 0; padding: 5px 10px; font-size: 10px; }
+.compact-arena .token-market-table { flex: 1; min-height: 0; overflow: auto; }
+.compact-arena .token-market-table table { height: 100%; }
+.compact-arena .token-market-table th { height: 34px; padding: 6px 16px; }
+.compact-arena .token-market-table td { height: auto; padding: 6px 16px; }
+.compact-arena .token-trend svg { height: 30px; }
+.setup-panel .join-form { border: 0; border-radius: 0; padding: 0; box-shadow: none; background: none; }
+.setup-panel .arena-round-length {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.controller-menu-focus { outline: 3px solid #3973f2 !important; outline-offset: 3px; }
+.controller-dialog-hint { margin-top: 10px; font-size: 11px; color: var(--muted); }
+.compact-arena .topbar .nav-item.active:hover { background: var(--wash); color: var(--ink); }
+.arena-mobile-market-picker { display: none; }
+@media (max-width: 1150px) {
+  .compact-arena .header-search-trigger { width: 170px; }
+  .compact-arena .topbar nav { gap: 4px; }
+  .compact-arena .nav-item { font-size: 12px; padding-inline: 8px; }
+  .compact-arena .pnl-badge { display: none; }
+  .compact-arena .player-name { max-width: 120px; }
+  .compact-arena .player-status { display: none; }
+  .arena-control-hint { display: none; }
+  .market-ownership .quote-status { display: none; }
+}
+@media (max-width: 850px) {
+  .compact-arena .topbar { padding-inline: 12px; gap: 10px; }
+  .compact-arena .brand > span { font-size: 20px; }
+  .compact-arena .topbar nav .nav-item { font-size: 0; padding: 7px; }
+  .compact-arena .header-search-trigger { width: 32px; min-width: 32px; padding: 6px; }
+  .compact-arena .header-search-trigger span, .compact-arena .header-search-trigger kbd { display: none; }
+  .compact-arena .connection-indicator { display: none; }
+  .compact-arena .player-card-top .status-tag { display: none; }
+  .compact-arena .player-avatar { display: block; width: 22px; height: 22px; flex: 0 0 22px; border-radius: 50%; }
+  .compact-arena .player-balance strong { font-size: 20px; }
+  .compact-arena .player-metrics > div:nth-child(2) { display: none; }
+  .compact-arena .chart-grid-label, .compact-arena .exchange-label { display: none; }
+}
+@media (max-width: 700px) {
+  .compact-arena main { padding: 6px 10px; gap: 6px; }
+  .compact-arena .paper-game-notice { display: flex; gap: 8px; min-height: 25px; font-size: 9px; }
+  .compact-arena .paper-game-notice > span { flex-wrap: nowrap; }
+  .compact-arena .paper-game-notice > span { font-size: 0; }
+  .compact-arena .paper-game-notice strong { font-size: 10px; }
+  .compact-arena .paper-game-notice button { margin: 0; max-width: 170px; font-size: 9px; }
+  .arena-welcome { min-height: 68px; gap: 8px; }
+  .arena-welcome h1 { font-size: 20px; }
+  .arena-welcome p { font-size: 10px; line-height: 1.4; }
+  .arena-start-actions > .button:first-child { display: none; }
+  .arena-start-actions .button { min-height: 36px; padding: 7px 10px; font-size: 10px; }
+  .compact-arena .scoreboard { height: 67px; grid-template-columns: minmax(0,1fr) 78px minmax(0,1fr); gap: 5px; }
+  .compact-arena .player-card { display: flex; flex-direction: column; justify-content: center; padding: 5px 7px; gap: 4px; border-radius: 10px; }
+  .compact-arena .player-name { font-size: 10px; max-width: 118px; }
+  .compact-arena .you-badge { display: none; }
+  .compact-arena .player-balance { margin: 0; }
+  .compact-arena .player-balance strong { font-size: 20px; }
+  .compact-arena .player-balance .label, .compact-arena .player-metrics { display: none; }
+  .compact-arena .clock-number { font-size: 26px; }
+  .compact-arena .clock-top > span:last-child { display: none; }
+  .compact-arena .clock-phase { font-size: 8px; }
+  .compact-arena .section-heading { flex-wrap: nowrap; height: 29px; min-height: 29px; gap: 5px; }
+  .compact-arena .section-title { gap: 5px; }
+  .compact-arena .section-title h2 { font-size: 13px; }
+  .compact-arena .muted-count, .compact-arena .market-view-toggle { display: none; }
+  .compact-arena .chart-toolbar { gap: 5px; }
+  .compact-arena .click-seat { font-size: 0; gap: 3px; }
+  .compact-arena .click-seat button { font-size: 9px; padding: 3px 5px; }
+  .compact-arena .timeframes button { padding-inline: 5px; font-size: 9px; }
+  .arena-mobile-market-picker { display: flex; flex: none; gap: 4px; }
+  .arena-mobile-market-picker button { flex: 1; padding: 6px 2px; border-radius: 6px; background: var(--wash); font-size: 10px; }
+  .arena-mobile-market-picker button.selected { background: var(--ink); color: #fff; }
+  .compact-arena .market-grid { grid-template-columns: minmax(0,1fr); grid-template-rows: minmax(0,1fr); gap: 0; }
+  .compact-arena .market-grid .market-card { display: none; }
+  .compact-arena .market-grid .market-card.mobile-focus { display: flex; }
+  .compact-arena .market-card-header { min-height: 40px; padding-top: 8px; }
+  .compact-arena .coin-title strong { font-size: 14px; }
+  .compact-arena .market-price-row { min-height: 40px; }
+  .compact-arena .market-price-row > strong { font-size: 28px; }
+  .compact-arena .trading-docks { grid-template-columns: minmax(0,1fr); height: 96px; gap: 0; }
+  .compact-arena .trade-dock { display: none; }
+  .compact-arena .trade-dock.active-dock { display: block; }
+  .arena-utility-bar { height: 22px; gap: 4px; font-size: 8px; }
+  .arena-utility-bar a { max-width: 152px; font-size: 7px; }
+  .arena-utility-bar > div { gap: 4px; }
+  .arena-utility-bar button { font-size: 9px; padding: 4px 5px; }
+  .compact-arena .result-banner strong { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .compact-arena .market-card, .market-selection-badge { animation: none; transition: none; }
+}
+
+/* Roomier desktop dashboard layout. */
+@media (min-width: 1100px) {
+  .compact-arena { height: 100dvh; min-height: 0; overflow: hidden; }
+  .compact-arena .topbar { height: 62px; min-height: 62px; padding-inline: 28px; }
+  .compact-arena main { flex: 1; min-height: 0; gap: 10px; padding: 12px 28px 10px; }
+  .compact-arena .match-topline { min-height: 18px; font-size: 10px; }
+  .compact-arena .scoreboard { height: clamp(66px, 10vh, 82px); gap: 14px; grid-template-columns: minmax(0,1fr) 146px minmax(0,1fr); }
+  .compact-arena .player-card { padding: 9px 14px; border-radius: 16px; row-gap: 7px; }
+  .compact-arena .player-name { font-size: 13px; }
+  .compact-arena .player-balance strong { font-size: clamp(21px, 2.5vh, 26px); }
+  .compact-arena .markets-section { flex: 1; min-height: 0; gap: 8px; }
+  .compact-arena .section-heading { height: 32px; min-height: 32px; }
+  .compact-arena .market-grid { flex: 1; min-height: 0; grid-template-rows: repeat(2, minmax(0,1fr)); gap: 12px; }
+  .compact-arena .market-card { border-radius: 18px; }
+  .compact-arena .market-card-header { min-height: 35px; padding: 6px 14px 0; }
+  .compact-arena .market-price-row { min-height: 35px; padding-inline: 14px; }
+  .compact-arena .market-price-row > strong { font-size: 26px; }
+  .compact-arena .market-grid .market-chart,.compact-arena .market-grid .chart-empty { flex: 1; min-height: 48px; }
+  .compact-arena .market-card-footer { margin-inline: 14px; height: 19px; min-height: 19px; }
+  .compact-arena .trading-docks { flex: none; height: clamp(86px, 13vh, 104px); gap: 12px; }
+  .compact-arena .trade-dock { padding: 8px 12px; border-radius: 16px; }
+  .compact-arena .dock-top { margin-bottom: 6px; }
+  .compact-arena .trade-button { min-height: 31px; }
+  .arena-utility-bar { height: 22px; }
+}
+
+@media (min-width: 1100px) and (max-height: 700px) {
+  .compact-arena .topbar { height: 54px; min-height: 54px; }
+  .compact-arena main { gap: 7px; padding: 8px 24px 7px; }
+  .compact-arena .scoreboard { height: 62px; grid-template-columns: minmax(0,1fr) 126px minmax(0,1fr); }
+  .compact-arena .player-card { padding: 6px 11px; }
+  .compact-arena .player-status,.compact-arena .player-metrics { display: none; }
+  .compact-arena .section-heading { height: 27px; min-height: 27px; }
+  .compact-arena .trading-docks { height: 92px; }
+  .compact-arena .trade-dock { display: flex; flex-direction: column; justify-content: space-between; min-height: 0; padding: 5px 10px; }
+  .compact-arena .dock-top { flex: none; height: 20px; margin: 0 0 3px; }
+  .compact-arena .trade-buttons { flex: none; gap: 6px; }
+  .compact-arena .trade-button { min-height: 27px; padding-block: 3px; }
+  .compact-arena .dock-bottom { flex: none; min-height: 20px; margin: 2px 0 0; justify-content: flex-end; }
+  .compact-arena .dock-bottom > span { display: none; }
+  .compact-arena .ready-button { min-height: 20px; padding: 3px 10px; }
+  .arena-utility-bar { height: 18px; align-items: center; }
+}

@@ -1,0 +1,189 @@
+.matchup-dialog {
+  width: min(644px, calc(100vw - 32px));
+  padding: 0;
+  border: 1px solid #38383e;
+  border-radius: 20px;
+  background: #18181b;
+  color: #f4f4f5;
+  box-shadow: 0 24px 80px #000b;
+}
+
+.matchup-dialog[open] { animation: matchup-enter 220ms cubic-bezier(.2,.75,.25,1) both; }
+.matchup-dialog::backdrop { background: #000b; backdrop-filter: blur(5px); animation: matchup-backdrop 180ms ease-out both; }
+@keyframes matchup-enter { from { opacity: 0; transform: translateY(7px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes matchup-backdrop { from { opacity: 0; } to { opacity: 1; } }
+
+.matchup-cover {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 60px;
+  padding: 0 26px;
+  border-bottom: 1px solid #323237;
+  background: #202023;
+}
+
+.matchup-cover-mark {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #444449;
+  border-radius: 8px;
+  background: #29292d;
+  color: #d0b8ff;
+}
+.matchup-cover-label { color: #f4f4f5; font-size: 11px; font-weight: 750; letter-spacing: .8px; }
+.matchup-cover-label span { margin-left: 6px; color: #a7a7ae; font-weight: 600; }
+
+.matchup-dialog .modal-card-body { padding: 22px 26px 20px; }
+.matchup-dialog .modal-header { margin: 0; }
+.matchup-dialog .modal-header h2 { font-size: 25px; line-height: 1.2; font-weight: 720; letter-spacing: -.8px; }
+.matchup-dialog .modal-header .icon-button {
+  position: absolute;
+  z-index: 2;
+  top: 13px;
+  right: 13px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #414147;
+  background: #29292d;
+  color: #d4d4d8;
+}
+.matchup-dialog .modal-header .icon-button:hover { background: #38383e; color: #fff; }
+.matchup-dialog .modal-header .icon-button svg { width: 16px; }
+.matchup-dialog .modal-copy { margin: 6px 0 18px; color: #b4b4bc; font-size: 13px; }
+
+.matchup-dialog .room-meta-line { margin: 0 0 12px; align-items: center; color: #b4b4bc; font-size: 11px; }
+.matchup-dialog .room-network { font-size: 9px; font-weight: 650; }
+.matchup-dialog .matchup-preview { grid-template-columns: minmax(0, 1fr) 135px minmax(0, 1fr); gap: 12px; align-items: stretch; }
+
+.matchup-dialog .matchmaking-player {
+  min-height: 178px;
+  padding: 13px 10px;
+  border: 1px solid #39393e;
+  border-radius: 13px;
+  background: #232326;
+}
+.matchup-dialog .opponent-card { background: #1e1e21; }
+.matchup-dialog .seat-eyebrow { margin-bottom: 10px; color: #b4b4bc; font-size: 10px; font-weight: 650; letter-spacing: .8px; }
+.matchup-dialog .matchmaking-player .avatar,
+.matchup-dialog .waiting-avatar { width: 49px; height: 49px; margin-bottom: 9px; }
+.matchup-dialog .waiting-avatar { border: 1px dashed #62626a; background: #29292d; box-shadow: none; color: #d4d4d8; font-size: 23px; }
+.matchup-dialog .avatar.identicon { border-color: #49494f; background: #29292d; box-shadow: none; }
+.matchup-dialog .matchmaking-player > strong { color: #f4f4f5; font-size: 14px; font-weight: 650; overflow-wrap: anywhere; }
+.matchup-dialog .waiting-name { margin-top: 4px; color: #b4b4bc; font-size: 11px; }
+.matchup-dialog .funding-badge { margin-top: 9px; border-color: #424248; background: #29292d; color: #c4c4cb; font-size: 9px; }
+
+.matchup-dialog .room-code-center { gap: 9px; }
+.matchup-dialog .versus-pill {
+  display: grid;
+  width: 31px;
+  height: 31px;
+  place-items: center;
+  margin: 0;
+  border: 1px solid #424248;
+  border-radius: 50%;
+  background: #262629;
+  color: #c4c4cb;
+  font-size: 9px;
+  font-weight: 750;
+  letter-spacing: .5px;
+}
+
+.matchup-dialog .room-code-field {
+  display: grid;
+  width: 100%;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid #39393e;
+  border-radius: 12px;
+  background: #111113;
+  text-align: center;
+}
+.matchup-dialog .room-code-field > label { color: #d4d4d8; font-size: 10px; font-weight: 680; letter-spacing: .8px; }
+.matchup-dialog .room-code-field > small { color: #a7a7ae; font-size: 9px; font-weight: 550; letter-spacing: .35px; }
+.matchup-dialog .room-code-field .room-code-input {
+  width: 100%;
+  height: 42px;
+  min-width: 0;
+  padding: 6px 4px;
+  border: 1px solid #55555d;
+  border-radius: 8px;
+  background: #232326;
+  color: #f4f4f5;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+}
+.matchup-dialog .room-code-field .room-code-input::placeholder { color: #a7a7ae; opacity: 1; }
+.matchup-dialog .room-code-field .room-code-input:focus { outline: 2px solid #d0b8ff; outline-offset: 2px; }
+
+.matchup-dialog .preview-disclosure { margin: 12px 0 0; padding: 8px 10px; border: 1px solid #39393e; border-radius: 9px; background: #202023; color: #b4b4bc; font-size: 11px; }
+.matchup-dialog .form-error { margin: 12px 0 0; }
+.matchup-dialog .matchup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 15px;
+  border-top: 1px solid #38383e;
+}
+.matchup-practice-options { display: flex; align-items: center; gap: 8px; }
+.matchup-practice-options .currency-picker-menu { top: auto; bottom: calc(100% + 8px); }
+.matchup-dialog .matchup-practice-button,
+.matchup-dialog .matchup-join-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 120px;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
+}
+.matchup-dialog .matchup-practice-button {
+  border-color: #45454c;
+  background: #232326;
+  color: #f4f4f5;
+}
+.matchup-dialog .matchup-practice-button:hover { background: #323237; }
+.matchup-dialog .matchup-join-button { background: #c4a6ff; color: #171122; }
+.matchup-dialog .matchup-join-button:not(:disabled):hover { background: #d4bfff; }
+.matchup-dialog .modal-footnote { margin: 12px 0 0; color: #a7a7ae; font-size: 11px; text-align: right; }
+
+.avatar.identicon {
+  overflow: hidden;
+  border: 1px solid #4c4058;
+  background: #17131d;
+  box-shadow: inset 0 1px 0 #ffffff0c, 0 5px 15px #0003;
+}
+.avatar.identicon > svg { display: block; width: 100%; height: 100%; }
+
+@media (max-width: 530px) {
+  .matchup-dialog { border-radius: 19px; }
+  .matchup-cover { padding-inline: 15px; }
+  .matchup-dialog .modal-card-body { padding: 17px 15px 16px; }
+  .matchup-dialog .modal-header h2 { font-size: 22px; }
+  .matchup-dialog .modal-copy { font-size: 12px; }
+  .matchup-dialog .matchup-preview { grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr); gap: 7px; }
+  .matchup-dialog .room-code-center { display: contents; }
+  .matchup-dialog .versus-pill { grid-area: 1 / 2; align-self: center; width: 28px; height: 28px; }
+  .matchup-dialog .room-code-field { grid-area: 2 / 1 / 3 / -1; grid-template-columns: 1fr minmax(0, 1fr); gap: 3px 8px; align-items: center; text-align: left; }
+  .matchup-dialog .room-code-field .room-code-input { grid-area: 1 / 2 / 3; }
+  .matchup-dialog .matchmaking-player { min-height: 149px; padding: 11px 5px; }
+  .matchup-dialog .matchmaking-player .avatar, .matchup-dialog .waiting-avatar { width: 40px; height: 40px; }
+  .matchup-dialog .waiting-name { font-size: 9px; }
+  .matchup-dialog .matchup-actions { flex-wrap: wrap; }
+  .matchup-practice-options { flex: 1 0 100%; }
+  .matchup-practice-options .currency-picker-trigger { height: 44px; }
+  .matchup-practice-options .currency-picker-menu { right: auto; left: 0; }
+  .matchup-dialog .matchup-practice-button, .matchup-dialog .matchup-join-button { flex: 1; min-width: 0; padding-inline: 8px; }
+  .matchup-dialog .modal-footnote { text-align: center; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .matchup-dialog[open], .matchup-dialog::backdrop { animation: none; }
+}

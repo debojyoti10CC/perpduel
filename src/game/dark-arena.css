@@ -1,0 +1,318 @@
+@font-face{font-family:'Inter Variable';src:url('/fonts/InterVariable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+:root{color-scheme:dark;--bg:#09090c;--panel:#16111f;--ink:#f2edf8;--text:#e8deef;--muted:#a295af;--faint:#7e6f8e;--wash:#241a2e;--line:#35283f;--border-medium:#533c63;--accent-decoration:#ae85dc;--card-shadow:0 8px 24px #0002}
+html,body,#root{background:#09090c;color:#eee5f7;min-width:320px}
+body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.dark-arena{position:relative;isolation:isolate;background:transparent!important;color:var(--ink);font-family:'Inter Variable',Inter,Arial,sans-serif}
+.dark-arena::before{position:fixed;content:'';inset:0;z-index:-1;pointer-events:none;background:linear-gradient(180deg,#09090c25,#09090c85)}
+.dark-arena .topbar,.dark-arena.in-match .topbar{position:relative;background:#100c16c9;border-bottom:1px solid #382840;backdrop-filter:blur(14px);box-shadow:none}
+.dark-arena .topbar .brand{display:flex;align-items:center;gap:9px;padding:0;color:#f5edf9}
+.dark-arena .arena-brand>svg{width:27px;height:27px;flex-shrink:0}
+.dark-arena .arena-brand>span{font-size:21px;line-height:1;letter-spacing:-1px;font-weight:650;color:#f3edf9}
+.dark-arena .brand-paper{display:none}
+.dark-arena .nav-item{color:#b09ebf;background:none;border-color:transparent}
+.dark-arena .nav-item:hover,.dark-arena .nav-item.active,.dark-arena .topbar .nav-item.active:hover{color:#f4e4fc;background:#30213b}
+.dark-arena .arena-lobby-link{display:flex;align-items:center;gap:3px}
+.dark-arena .header-search-trigger{background:#201728;border:1px solid #403047;color:#baa4ca}
+.dark-arena .header-search-trigger kbd{background:#30223b;color:#af98c2;border-color:#4a3558}
+.dark-arena .header-search-trigger:hover{background:#2d1e38;border-color:#715086}
+.dark-arena .icon-button{color:#b79ac9;background:transparent;border-color:transparent}
+.dark-arena .icon-button:hover{background:#33203f;color:#e6c9fa}
+.dark-arena .count-bubble{background:#382345;color:#d5b4eb}
+.dark-arena .connection-indicator{color:#947ba5}
+.dark-arena .connection-indicator.online{color:#8bceb0}
+.dark-arena main{background:transparent}
+.dark-arena main::before,.dark-arena main::after{display:none}
+.dark-arena .paper-game-notice{background:#19121fcf;border:1px solid #3b2a46;color:#9780a9}
+.dark-arena .paper-game-notice strong{color:#c9addb;font-size:10px;font-weight:500;letter-spacing:.08px}
+.dark-arena .paper-game-notice button{color:#b396c4;font-size:9px}
+.arena-stake-summary{display:inline-flex;align-items:center;gap:7px;margin-left:12px;white-space:nowrap}
+.arena-stake-summary>span{color:#8e709f;font-size:8px;letter-spacing:.6px}
+.arena-stake-summary>b{color:#e7c8fb;font-size:11px;font-weight:600;font-variant-numeric:tabular-nums}
+.arena-stake-summary>small{color:#b899ca;background:#35223f;padding:2px 5px;border-radius:4px;font-size:7px;font-weight:500}
+.dark-arena .match-topline{color:#9a80ab}
+.dark-arena .room-code{border:1px solid #5d3e71;background:#2d1b3b;color:#dfb8f7;letter-spacing:1px;font-weight:650}
+.dark-arena .match-topline .text-button{color:#bea0d0;background:none}
+.dark-arena .match-topline .text-button:hover{color:#e7c9ff}
+.dark-arena .scoreboard{height:82px;gap:12px}
+.dark-arena .player-card,.dark-arena .player-card.player-1{background:linear-gradient(130deg,#1b1426fa,#131019fa);border:1px solid #4a335b;box-shadow:0 5px 20px #0002;border-radius:15px}
+.dark-arena .player-card.player-0{border-color:#36496d;background:linear-gradient(130deg,#141e2efa,#131019fa)}
+.dark-arena .player-card.player-1{border-color:#5c3b72;background:linear-gradient(230deg,#24152efa,#131019fa)}
+.dark-arena .player-avatar{background:#233856;color:#a9c8ff;border:1px solid #3a5b87}
+.dark-arena .player-1 .player-avatar{background:#412753;color:#e3beff;border-color:#6f438e}
+.dark-arena .player-name{color:#eee2f9;font-weight:550}
+.dark-arena .you-badge{background:#2b4267;color:#b3ccfa;border-color:#345a90}
+.dark-arena .player-1 .you-badge{background:#513263;color:#e0b7f9;border-color:#77508d}
+.dark-arena .player-status{color:#9b8aab}
+.dark-arena .label{color:#907c9f}
+.dark-arena .player-balance strong{color:#f4eafc}
+.dark-arena .pnl-badge.positive{background:#18382e;color:#9ae0bd}
+.dark-arena .pnl-badge.negative{background:#41202f;color:#eda6bc}
+.dark-arena .player-metrics span{color:#947eA4}
+
+/* Dashboard inspired arena surfaces: quieter chrome, clearer panel hierarchy. */
+.dark-arena .topbar{background:#111014;border-color:#29252f;box-shadow:0 1px 0 #ffffff05}
+.dark-arena .nav-item{border-radius:999px;padding:8px 12px;font-size:11px}
+.dark-arena .nav-item.active,.dark-arena .nav-item:hover{background:#2b2334;color:#eee5f7}
+.dark-arena .paper-game-notice{background:#17151b;border-color:#302b36;color:#aaa1b3}
+.dark-arena .paper-game-notice strong{color:#e4dce9}
+.dark-arena .scoreboard{gap:14px}
+.dark-arena .player-card,.dark-arena .player-card.player-0,.dark-arena .player-card.player-1{background:#19171d;border:1px solid #34303a;box-shadow:0 8px 20px #0002}
+.dark-arena .player-card.player-0{border-left:2px solid #655080}
+.dark-arena .player-card.player-1{border-left:2px solid #8d70b3}
+.dark-arena .clock-card{background:#211a29;border:1px solid #4a3a59;box-shadow:0 8px 22px #0003}
+.dark-arena .market-card{background:#19171d;border-color:#332e39;box-shadow:0 8px 22px #0002}
+.dark-arena .market-card:hover{border-color:#544665;box-shadow:0 10px 26px #0004}
+.dark-arena .market-chart{background:transparent}
+.dark-arena .trade-dock{background:#19171d;border-color:#38323e;box-shadow:0 8px 22px #0002}
+.dark-arena .trade-dock.active-dock{border-color:#58466b}
+.dark-arena .market-view-toggle,.dark-arena .timeframes{background:#1b1820;border-color:#302b36}
+.dark-arena .market-view-toggle button.selected,.dark-arena .timeframes button.selected{background:#3a2d49;color:#eadcf6;box-shadow:none}
+.dark-arena .arena-utility-bar button{background:#211b27;border:1px solid #382f40;color:#bba9c7}
+.dark-arena .arena-utility-bar button:hover{background:#30243a;color:#eee5f7}
+.dark-arena .player-metrics b{color:#d6bddf}
+.dark-arena .status-tag{color:#a18ab3;background:#2e2138;border-color:#493254}
+.dark-arena .status-tag.ready{color:#9adab9;background:#19362a;border-color:#356348}
+.dark-arena .status-tag.danger{color:#e7a2bc;background:#3b1d2e;border-color:#70354d}
+.dark-arena .clock-card{background:#19111ff2;border:1px solid #5a3a6f;box-shadow:inset 0 1px 0 #d1a3ee0c}
+.dark-arena .clock-top{color:#ae8ec4}
+.dark-arena .clock-number{color:#f6e8ff;font-weight:620;font-variant-numeric:tabular-nums}
+.dark-arena .clock-phase{color:#b697c9}
+.dark-arena .clock-card.urgent{background:#321524;border-color:#9f4767}
+.dark-arena .clock-card.urgent .clock-number{color:#ffc0d8}
+.dark-arena .clock-track{background:#37223e}
+.dark-arena .clock-track i{background:#c496e5}
+.dark-arena .lobby-banner{background:#21172c;border-color:#4d315f;color:#b29ac2}
+.dark-arena .lobby-banner strong{color:#e0c5f1}
+.dark-arena .status-banner{background:#261c32;border-color:#4d315f;color:#c2a9d3}
+.dark-arena .status-banner.danger{background:#351c29;color:#e9a5be;border-color:#67364b}
+.dark-arena .result-banner{background:#251a30;border-color:#70518a}
+.dark-arena .markets-section{min-height:0}
+.dark-arena .section-title{color:#b88fd6}
+.dark-arena .section-title h2{color:#e4c9f3;font-weight:550}
+.dark-arena .muted-count,.dark-arena .chart-grid-label,.dark-arena .exchange-label{color:#836493}
+.dark-arena .timeframes,.dark-arena .market-view-toggle{background:#1f1528;border:1px solid #3d294b}
+.dark-arena .timeframes button,.dark-arena .market-view-toggle button{color:#9777aa;background:none}
+.dark-arena .timeframes button.selected,.dark-arena .market-view-toggle button.selected{color:#e8c9fc;background:#483055;box-shadow:0 1px 3px #0003}
+.dark-arena .timeframes button:hover,.dark-arena .market-view-toggle button:hover{color:#e1bff8;background:#35223f}
+.dark-arena .click-seat{color:#8e739e}
+.dark-arena .click-seat button{background:#21172b;border-color:#49325b;color:#ad8bc3}
+.dark-arena .click-seat .p1.selected{background:#233e62;color:#b6d2ff;border-color:#4974b0}
+.dark-arena .click-seat .p2.selected{background:#4b2d61;color:#e6bbff;border-color:#9462b0}
+.dark-arena .market-card{background:#121017f5;border:1px solid #382b43;box-shadow:0 4px 17px #0002}
+.dark-arena .market-card:hover{background:#17111ff7;border-color:#725183}
+.dark-arena .market-card.selected-p1{border-color:#7a9de7;box-shadow:0 0 0 2px #6485da14}
+.dark-arena .market-card.selected-p2{border-color:#bf91e8;box-shadow:0 0 0 2px #ac72d318}
+.dark-arena .market-card.selected-p1.selected-p2{border-color:#a28ce0;box-shadow:inset 3px 0 #779ae6,inset -3px 0 #c291e7}
+.dark-arena .market-card.selected-p1 .market-card-header{background:linear-gradient(90deg,#496eaf14,transparent)}
+.dark-arena .market-card.selected-p2 .market-card-header{background:linear-gradient(90deg,#9f58c116,transparent)}
+.dark-arena .coin-title{color:#ebdff4}
+.dark-arena .coin-title strong>span:not(.perp-badge){color:#947ca2}
+.dark-arena .perp-badge{background:#31203e;color:#ad8bc1;border-color:#4e315e}
+.dark-arena .market-price-row>strong{color:#f0e6f8;font-weight:500;font-variant-numeric:tabular-nums}
+.dark-arena .unavailable-price{color:#71647d!important}
+.dark-arena .coin-icon{border-color:#ffffff10}
+.dark-arena .market-card-footer{border-color:#30213e;color:#80678f}
+.dark-arena .market-card-footer b{color:#a990b9}
+.dark-arena .market-selection-badge.p1,.dark-arena .selection-pill.p1{background:#203957;color:#a4c6ff;border-color:#4d73a8}
+.dark-arena .market-selection-badge.p2,.dark-arena .selection-pill.p2{background:#412653;color:#dbaaf9;border-color:#80509e}
+.dark-arena .quote-status{color:#80658d}
+.dark-arena .quote-status.fresh{color:#71c49e}
+.dark-arena .quote-status.fresh i{background:#72d5a7}
+.dark-arena .position-mini.p1{background:#203957;color:#a4c6ff}
+.dark-arena .position-mini.p2{background:#412653;color:#dbaaf9}
+.dark-arena .market-chart{background:transparent}
+.dark-arena .chart-empty,.dark-arena .chart-warming,.dark-arena .chart-loading{background:#15111b;color:#8f749f}
+.dark-arena .expanded-chart{border-color:#50335f}
+.dark-arena .empty-chart-line{display:none}
+.dark-arena .feed-warning{background:#2b2034;border-color:#533761;color:#b398c2}
+.dark-arena .feed-warning svg{color:#c4a1dc}
+.dark-arena .fixture-ribbon{background:#4c321a;color:#f4cb85;border-color:#8f6234}
+.dark-arena .trade-dock,.dark-arena .trade-dock.player-0,.dark-arena .trade-dock.player-1{background:#17111ff7;border:1px solid #402b50;box-shadow:0 4px 14px #0002}
+.dark-arena .trade-dock.player-0.active-dock{border-color:#4d648c}
+.dark-arena .trade-dock.player-1.active-dock{border-color:#80519c}
+.dark-arena .seat-marker.p1{background:#243d62;color:#b7d1fa;border-color:#3b5b87}
+.dark-arena .seat-marker.p2{background:#4a2b5c;color:#e7b8ff;border-color:#7e4c97}
+.dark-arena .dock-symbol strong{color:#e4c9f2}
+.dark-arena .dock-symbol strong>span,.dark-arena .margin-control>span{color:#9a7eac}
+.dark-arena .dock-symbol button,.dark-arena .margin-control button{background:#281c33;border-color:#4b315c;color:#b99bcc}
+.dark-arena .margin-control>strong{color:#debeed}
+.dark-arena .leverage-badge{background:#3a244b;color:#c4a0d9;border-color:#58366c}
+.dark-arena .trade-button.long{background:linear-gradient(#244e3d,#1b3a2e);border-color:#3a7b59;color:#b2edce;box-shadow:inset 0 1px 0 #caffdf0c}
+.dark-arena .trade-button.short{background:linear-gradient(#572a3d,#3d1d2d);border-color:#87465d;color:#ffc1d5;box-shadow:inset 0 1px 0 #ffd4e30c}
+.dark-arena .trade-button.close-half,.dark-arena .trade-button.close-all{background:#2c1e38;border-color:#583d69;color:#c9a9dd}
+.dark-arena .trade-button:not(:disabled):hover{filter:brightness(1.22);transform:translateY(-1px)}
+.dark-arena .trade-button:disabled{opacity:.35;filter:saturate(.6)}
+.dark-arena .pad-key{border-color:#ffffff25;background:#0002;color:inherit}
+.dark-arena .dock-bottom>span{color:#9c82ad}
+.dark-arena .button,.dark-arena .button-small{background:#2a1c35;color:#d8b8e8;border:1px solid #5d3d70;box-shadow:inset 0 1px 0 #e9c6ff0a}
+.dark-arena .button:hover{background:#3b264a;color:#f0d5ff;border-color:#9163a9}
+.dark-arena .button-primary,.dark-arena .ready-button{border:1px solid #edd5ff;border-bottom-color:#9c6fc4;background:linear-gradient(180deg,#f5e0ff,#d8b3f4 54%,#bd8de1);color:#331346;font-weight:650;box-shadow:inset 0 1px 0 #fffb,0 3px 0 #603977,0 5px 13px #a56bce16}
+.dark-arena .button-primary:hover,.dark-arena .ready-button:hover{background:linear-gradient(180deg,#fff2ff,#e9cafc 54%,#cea3ef);border-color:#f7e8ff;color:#2c0e3c;box-shadow:inset 0 1px 0 #fffc,0 4px 0 #72448c,0 6px 18px #d59aff22;transform:translateY(-1px)}
+.dark-arena .button-primary:active,.dark-arena .ready-button:active{transform:translateY(2px);box-shadow:inset 0 1px 3px #4e1b6833}
+.dark-arena .ready-button.is-ready{background:linear-gradient(#315d47,#254632);border-color:#538764;color:#b7ecc7;box-shadow:0 2px 0 #183025}
+.dark-arena .button:disabled{opacity:.4;filter:saturate(.35);cursor:not-allowed}
+.dark-arena .arena-utility-bar{color:#92739f}
+.dark-arena .arena-utility-bar button{background:#25192f;border:1px solid #442c52;color:#b795ca}
+.dark-arena .arena-utility-bar button:hover{background:#3b2548;color:#e4c1f5}
+.dark-arena .arena-utility-bar button:disabled{opacity:.35}
+.dark-arena .arena-welcome h1{color:#f1e2fb;font-size:30px;font-weight:650;letter-spacing:-1px}
+.dark-arena .arena-welcome p{color:#a98ab9}
+.dark-arena .arena-mobile-market-picker button{background:#25172f;color:#aa86c0;border:1px solid #442b52}
+.dark-arena .arena-mobile-market-picker button.selected{background:#64417d;color:#f0d8ff;border-color:#a273bc}
+.dark-arena .modal-backdrop{background:#030206b5;backdrop-filter:blur(7px);z-index:100}
+.dark-arena .modal{background:#18101ff7;color:#ecdaf5;border:1px solid #58376c;box-shadow:0 25px 100px #0009}
+.dark-arena .modal-header h2{color:#f0dcfc;font-weight:600}
+.dark-arena .modal-header p,.dark-arena .controller-dialog-hint{color:#aa87bd}
+.dark-arena .modal-close{background:#2e1c3c;color:#bd95d3}
+.dark-arena .modal-close:hover{background:#4b2d5e;color:#eed3ff}
+.dark-arena .modal-actions{border-color:#442a54}
+.dark-arena .arena-leave-copy{font-size:13px;line-height:1.8;color:#ba96ca}
+.dark-arena .join-form,.dark-arena .setup-panel .join-form{background:none;border:0}
+.dark-arena .mode-switch{background:#24162f;border-color:#4f315f}
+.dark-arena .mode-switch button{color:#ae85c0;background:none}
+.dark-arena .mode-switch button.selected{background:#583469;color:#edcffa;border-color:#855797}
+.dark-arena .name-fields label{color:#c19bd4}
+.dark-arena .name-fields input,.dark-arena select{background:#24152e;color:#eed4fa;border:1px solid #5a356e}
+.dark-arena .name-fields input::placeholder{color:#886598}
+.dark-arena .name-fields input:focus{border-color:#b57cd0;box-shadow:0 0 0 3px #ae72ce12}
+.dark-arena .join-footer{color:#a77dbb}
+.dark-arena .join-footer button{color:#dfb3f3}
+.dark-arena .five-minutes{background:#3b224a;color:#c99bdf;border-color:#613774}
+.dark-arena .rules-summary>div,.dark-arena .controller-slot,.dark-arena .ledger-network,.dark-arena .receipt-data,.dark-arena .result-player,.dark-arena .history-item,.dark-arena .positions-panel{background:#21142b;border:1px solid #50315f}
+.dark-arena .rules-summary strong,.dark-arena .rules-columns h3,.dark-arena .controller-slot h3,.dark-arena .ledger-network h3,.dark-arena .history-item h3{color:#ebcff8}
+.dark-arena .rules-summary span,.dark-arena .rules-list,.dark-arena .rules-columns p,.dark-arena .controller-slot p,.dark-arena .ledger-network p,.dark-arena .history-item p,.dark-arena .paper-explanation p{color:#b28ac4}
+.dark-arena .rules-note{background:#30203b;color:#cba1dc;border-color:#563568}
+.dark-arena .score-formula{background:#2b1b36;color:#e2b4f5;border-color:#543464}
+.dark-arena kbd{background:#34203f;color:#d4a8e9;border-color:#5f3b70}
+.dark-arena .control-table>div,.dark-arena .setting-divider,.dark-arena .result-breakdown>div{border-color:#43284f}
+.dark-arena .control-table-head,.dark-arena .fine-print,.dark-arena .range-labels,.dark-arena .setting-row p,.dark-arena .ledger-details dt,.dark-arena .receipt-data span,.dark-arena .result-breakdown dt,.dark-arena .result-note{color:#a880b9}
+.dark-arena .setting-row h3,.dark-arena .setting-value,.dark-arena .ledger-details dd,.dark-arena .receipt-data b,.dark-arena .result-breakdown dd{color:#dfbced}
+.dark-arena .toggle{background:#493052;border-color:#654276}.dark-arena .toggle.on{background:#b47ad5}.dark-arena .toggle span{background:#eed9fa}
+.dark-arena .result-player.winner{border-color:#d1a1ec;background:linear-gradient(140deg,#3f234e,#20142b);box-shadow:0 0 24px #b774db13}
+.dark-arena .result-player-heading h3{color:#e8c8f6}
+.dark-arena .winner-badge{background:#57366b;color:#edc7ff;border-color:#8a589f}
+.dark-arena .final-score{color:#efd5ff}
+.dark-arena .result-trophy{background:#3e254d;color:#deb1f6;box-shadow:0 0 35px #c679ee14}
+.arena-result-stake{border:1px solid #7d4c96;background:linear-gradient(125deg,#3c214b,#24152f);padding:17px 20px;border-radius:14px;margin:20px 0;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
+.arena-result-stake>span{font-size:9px;color:#b78bca;letter-spacing:1px}.arena-result-stake>strong{margin-left:auto;font-size:22px;letter-spacing:-.5px;color:#edccff}.arena-result-stake>p{width:100%;font-size:12px;margin:0;color:#c39bd6}
+.arena-claim{background:#25142f;border:1px solid #644078;padding:17px 20px;border-radius:14px;margin:16px 0}.arena-claim>div{display:flex;align-items:center;gap:8px;color:#d5a3ed}.arena-claim>div>strong{font-size:13px;font-weight:550;color:#e5c1f5}.arena-claim>div>span{font-size:7px;letter-spacing:.5px;margin-left:auto;color:#b183c4;background:#3b2249;border-radius:4px;padding:4px 6px}.arena-claim>p{color:#ad82be;font-size:11px;line-height:1.75;margin:10px 0 15px}.arena-claim>button{min-height:38px;padding:9px 14px}.arena-claim .arena-claim-status{color:#a1d4ba;margin-bottom:0}.arena-claim .arena-claim-error{color:#efa6c2;background:#442134;border-radius:8px;padding:10px 12px;margin-bottom:0}.arena-claim-receipt{display:inline-flex;align-items:center;gap:6px;font-size:10px;margin-top:13px;color:#c997e3}.arena-claim-receipt:hover{color:#efd5ff}
+.dark-arena .positions-header,.dark-arena th,.dark-arena td{border-color:#452b53}
+.dark-arena th,.dark-arena .positions-header>span{background:#21142b;color:#a97ebc}
+.dark-arena td{color:#dbb9ea}
+.dark-arena .panel-tabs button{color:#a880b9}.dark-arena .panel-tabs button.selected{color:#e5bcfa}.dark-arena .panel-tabs button>span{background:#4b2d5c;color:#d1a5e5}
+.dark-arena .empty-positions{color:#a77ebb}.dark-arena .empty-positions strong{color:#ddbae9}
+.dark-arena .token-market-table{background:#17101ef7;border-color:#50315f}
+.dark-arena .token-market-table tr:hover{background:#2a1934}
+.dark-arena .token-market-table tr.token-row-p1{background:#17243a}.dark-arena .token-market-table tr.token-row-p2{background:#2c183c}
+.dark-arena .token-market-name,.dark-arena .token-price-cell{color:#e5c9f2}.dark-arena .token-market-symbol,.dark-arena .token-volume-cell{color:#aa87bb}
+.dark-arena .token-live-tag{color:#8c6e9d}.dark-arena .token-live-tag.is-live{color:#83c7a6}
+.dark-arena .token-search-input-wrap{border-color:#50315f;background:#24152e}.dark-arena .token-search-input{background:transparent;color:#e7c8f7}.dark-arena .token-search-input::placeholder{color:#8f6b9f}
+.dark-arena .token-search-row{border-color:#40264e;color:#e3bfee}.dark-arena .token-search-row:hover{background:#2b1936}.dark-arena .token-search-identity small,.dark-arena .token-search-quote small,.dark-arena .token-search-footer{color:#aa7dbc}
+.dark-arena .token-search-identity strong,.dark-arena .token-search-quote{color:#e0b9f0}.dark-arena .token-search-row[aria-selected=true]{background:#3c234a}.dark-arena .token-search-footer{border-color:#4a2e58}.dark-arena .hash-button,.dark-arena .history-icon{background:#352040;color:#c699df;border-color:#5c376f}.dark-arena .history-scores{color:#d5abec}.dark-arena .range-input{accent-color:#c493ed}
+.dark-arena .expanded-price>strong{color:#f2d8ff}.dark-arena .depth-heading h3{color:#e3b9f3}.dark-arena .depth-heading>span,.dark-arena .depth-table-head,.dark-arena .depth-unavailable{color:#ac80bd}
+.dark-arena .depth-row{background:#22142b;border-color:#3e264c}.dark-arena .depth-row.bids{color:#8bd7b0}.dark-arena .depth-row.asks{color:#ed9db8}
+.dark-arena .depth-row::before{background:#214934}.dark-arena .depth-row.asks::before{background:#4e273b}
+.dark-arena .toast{background:#2b1a35;color:#e8c5f6;border:1px solid #624074;box-shadow:0 8px 30px #0007}
+.dark-arena .toast>span{color:#d7b6e7}.dark-arena .toast-fill>span{color:#a0d8ba}.dark-arena .toast-reject>span,.dark-arena .toast-risk>span{color:#e6a0b8}
+.dark-arena .toast>svg{color:#bd89d9}.dark-arena .toast-reject{background:#38202d;border-color:#7e405c}.dark-arena .toast-reject>svg{color:#eda4bf}
+.dark-arena .toast>button{background:none;color:#b587c9}
+.dark-arena .positive{color:#8cd5b1}.dark-arena .negative{color:#eda0b9}
+.dark-arena button:focus-visible,.dark-arena a:focus-visible,.dark-arena input:focus-visible,.dark-arena select:focus-visible,.dark-arena .controller-menu-focus{outline:2px solid #d4a1f4!important;outline-offset:3px}
+@media(max-width:1150px){.dark-arena .arena-lobby-link{font-size:0;padding:7px}.arena-stake-summary>span{display:none}.dark-arena .arena-brand>span{font-size:19px}.dark-arena .scoreboard{height:76px}}
+@media(max-width:850px){.dark-arena .topbar{gap:8px;padding-inline:12px}.dark-arena .topbar nav{gap:2px}.dark-arena .topbar-tools{gap:4px}.dark-arena .arena-brand>span{font-size:18px;letter-spacing:-.8px}.dark-arena .arena-brand>svg{width:24px;height:24px}.arena-stake-summary{margin-left:5px;gap:5px}.arena-stake-summary>b{font-size:10px}.dark-arena .paper-game-notice>span{gap:4px}.dark-arena .paper-game-notice strong{font-size:9px}}
+@media(max-width:700px){.dark-arena .scoreboard{height:71px;gap:5px}.dark-arena .arena-brand{gap:6px}.dark-arena .arena-brand>span{font-size:16px;letter-spacing:-.7px}.dark-arena .arena-brand>svg{width:22px;height:22px}.dark-arena .topbar nav .nav-item{padding:5px}.dark-arena .topbar-tools .icon-button{width:25px;height:27px}.dark-arena .header-search-trigger{width:27px;min-width:27px}.dark-arena .count-bubble{font-size:7px}.dark-arena .paper-game-notice{min-height:26px}.dark-arena .paper-game-notice strong{display:none}.dark-arena .arena-stake-summary>b{font-size:10px}.dark-arena .arena-stake-summary>small{font-size:6px}.dark-arena .paper-game-notice>span{font-size:9px}.dark-arena .paper-game-notice button{max-width:130px;white-space:nowrap;font-size:8px}.dark-arena .match-topline{font-size:8px}.dark-arena .match-topline>span{gap:5px}.dark-arena .match-topline .text-button{font-size:8px}.dark-arena .room-code{letter-spacing:.7px}.dark-arena .player-card{padding:5px 7px}.dark-arena .player-name{font-size:10px}.dark-arena .player-balance strong{font-size:20px}.dark-arena .player-card-top{max-width:100%}.dark-arena .clock-number{font-size:26px}.dark-arena .markets-section{gap:6px}.dark-arena .trade-dock{border-radius:11px}.arena-result-stake{padding:13px;gap:10px}.arena-result-stake>strong{font-size:18px}.arena-result-stake>p{font-size:11px}.dark-arena .arena-welcome h1{font-size:22px}}
+@media(max-width:390px){.dark-arena .topbar nav .nav-item:first-child{display:none}.dark-arena .topbar{gap:5px}.dark-arena .header-right{gap:5px}.dark-arena .topbar-tools{gap:1px}.dark-arena .fullscreen-button{display:none}.dark-arena .match-topline>button{font-size:0}.dark-arena .player-balance strong{font-size:18px}}
+@media(prefers-reduced-motion:reduce){.dark-arena *,.dark-arena *::before,.dark-arena *::after{animation:none!important;transition:none!important}}
+
+/* Ghost Finance palette adapted for the trading terminal. */
+.dark-arena{--bg:#101010;--panel:#1a1a1a;--wash:#202020;--line:#303030;--muted:#a3a3a3;--faint:#777;--accent-decoration:#34d399;font-family:Poppins,'Inter Variable',Inter,system-ui,sans-serif}
+.dark-arena .topbar{background:#101010;border-color:#262626}
+.dark-arena .nav-item.active{background:#1a1a1a;color:#fff}
+.dark-arena .market-card,.dark-arena .trade-dock,.dark-arena .player-card,.dark-arena .player-card.player-0,.dark-arena .player-card.player-1{background:#1a1a1a;border-color:#303030;box-shadow:none}
+.dark-arena .market-card:hover,.dark-arena .trade-dock.active-dock{border-color:#4a4a4a}
+.dark-arena .clock-card{background:#161616;border-color:#3b2c43;box-shadow:none}
+.dark-arena .market-view-toggle,.dark-arena .timeframes{background:#161616;border-color:#303030}
+.dark-arena .market-view-toggle button.selected,.dark-arena .timeframes button.selected{background:#e2a9f1;color:#201526}
+.dark-arena .market-card.selected-p1{border-color:#34d399;background:#1a1a1a;box-shadow:inset 3px 0 #34d399}
+.dark-arena .market-card.selected-p2{border-color:#e2a9f1;background:#1a1a1a;box-shadow:inset -3px 0 #e2a9f1}
+.dark-arena .market-card.selected-p1.selected-p2{border-color:#8b71a0;box-shadow:inset 3px 0 #34d399,inset -3px 0 #e2a9f1}
+.dark-arena .market-card.selected-p1 .market-card-header,.dark-arena .market-card.selected-p2 .market-card-header{background:none}
+.dark-arena .trade-button.long{background:#126344;border-color:#168455;color:#d1fae5;box-shadow:none}
+.dark-arena .trade-button.short{background:#512333;border-color:#713248;color:#ffe4ec;box-shadow:none}
+.dark-arena .ready-button{background:#e2a9f1;color:#211727;box-shadow:none}
+.dark-arena .ready-button:hover{background:#efc7f7}
+.dark-arena .market-card-footer{border-color:#303030}
+.dark-arena .positive{color:#34d399}
+.dark-arena .player-avatar.identicon{background:transparent;border:0;padding:0;overflow:hidden;border-radius:50%;box-shadow:none}
+@media(min-width:1100px){.dark-arena .market-chart{min-height:132px}.dark-arena .market-card-footer{font-size:10px}.dark-arena .market-price-row>strong{font-size:27px}.dark-arena .clock-number{font-weight:500}}
+
+.dark-arena .arena-result-dialog {
+  width: 680px;
+  max-height: calc(100dvh - 32px);
+  padding: clamp(14px, 3vw, 24px);
+  border: 1px solid #38383e;
+  border-radius: 20px;
+  background: #18181b;
+  color: #f4f4f5;
+  scrollbar-width: thin;
+  scrollbar-color: #56565e #18181b;
+}
+.arena-result-dialog .modal-header { margin-bottom: 16px; gap: 12px; }
+.dark-arena .arena-result-dialog h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #f4f4f5;
+  font-size: clamp(21px, 3vw, 26px);
+  line-height: 1.2;
+}
+.arena-result-dialog .result-heading-icon {
+  display: grid;
+  flex: 0 0 36px;
+  height: 36px;
+  place-items: center;
+  border-radius: 10px;
+  background: #34293d;
+  color: #e2a9f1;
+}
+.dark-arena .arena-result-dialog .modal-header p,
+.dark-arena .arena-result-dialog .controller-dialog-hint {
+  margin: 7px 0 0;
+  color: #b4b4bc;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.dark-arena .arena-result-dialog .controller-dialog-hint { font-size: 10px; }
+.dark-arena .arena-result-dialog .modal-close { background: #29292d; color: #d4d4d8; border-color: #414147; }
+.dark-arena .arena-result-dialog .modal-close:hover { background: #38383e; color: #fff; }
+.arena-result-dialog .result-grid { gap: 10px; }
+.dark-arena .arena-result-dialog .result-player {
+  min-width: 0;
+  padding: clamp(10px, 2vw, 16px);
+  border: 1px solid #39393e;
+  border-radius: 13px;
+  background: #232326;
+  box-shadow: none;
+}
+.dark-arena .arena-result-dialog .result-player.winner { border-color: #9469a1; }
+.dark-arena .arena-result-dialog h3 { min-width: 0; color: #f4f4f5; font-size: 13px; overflow-wrap: anywhere; }
+.arena-result-dialog .winner-badge { color: #efd5ff; font-size: 9px; }
+.arena-result-dialog .result-metric { display: grid; gap: 3px; margin-top: 12px; }
+.arena-result-dialog .result-metric > span { color: #b4b4bc; font-size: 11px; }
+.arena-result-dialog .result-metric > strong { font-size: clamp(19px, 3vw, 28px); font-weight: 650; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.arena-result-dialog .result-breakdown { margin: 10px 0 0; }
+.dark-arena .arena-result-dialog .result-breakdown > div { gap: 6px; padding: 6px 0; border-color: #39393e; }
+.dark-arena .arena-result-dialog .result-breakdown dt { color: #b4b4bc; font-size: 11px; }
+.dark-arena .arena-result-dialog .result-breakdown dd { color: #f4f4f5; font-size: 11px; white-space: nowrap; }
+.arena-result-dialog .arena-result-stake,
+.arena-result-dialog .arena-claim { margin: 12px 0 0; padding: 12px; border-color: #39393e; background: #232326; }
+.arena-result-dialog .result-note { margin-top: 10px; color: #b4b4bc; }
+.dark-arena .arena-result-dialog .modal-actions { margin-top: 12px; padding-top: 12px; border-color: #38383e; }
+.dark-arena .arena-result-dialog .button { min-height: 36px; background: #29292d; border-color: #414147; color: #f4f4f5; box-shadow: none; }
+.dark-arena .arena-result-dialog .button:hover:not(:disabled) { background: #38383e; }
+.dark-arena .arena-result-dialog .button-primary { background: #e2a9f1; border-color: #e2a9f1; color: #211727; }
+.dark-arena .arena-result-dialog .button-primary:hover:not(:disabled) { background: #efc7f7; }
+
+@media (max-width: 420px) {
+  .arena-result-dialog .result-breakdown > div { flex-wrap: wrap; }
+}
