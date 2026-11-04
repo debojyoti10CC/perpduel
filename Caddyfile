@@ -1,0 +1,9 @@
+# For real remote controller play, set TRADING_DUEL_DOMAIN to your own DNS name.
+# Example (replace with your real domain): duel.your-domain.com
+# Caddy automatically obtains HTTPS certificates when DNS and ports 80/443 work.
+{$TRADING_DUEL_DOMAIN:localhost} {
+    encode zstd gzip
+    reverse_proxy app:3000
+    # For Caddy installed beside a native npm server, replace the line above with:
+    # reverse_proxy localhost:3000
+}

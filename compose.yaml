@@ -1,0 +1,39 @@
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "${TRADING_DUEL_PORT:-3000}:3000"
+    environment:
+      HOST: 0.0.0.0
+      PORT: 3000
+      DATA_DIR: /app/data
+      LEDGER_MODE: ${LEDGER_MODE:-local-evm}
+      RPC_URL: ${RPC_URL:-}
+      EXPECTED_CHAIN_ID: ${EXPECTED_CHAIN_ID:-10143}
+      CONTRACT_ADDRESS: ${CONTRACT_ADDRESS:-}
+      OPERATOR_PRIVATE_KEY: ${OPERATOR_PRIVATE_KEY:-}
+    volumes:
+      - trading_duel_data:/app/data
+  caddy:
+    image: caddy:2-alpine
+    profiles: [https]
+    restart: unless-stopped
+    depends_on:
+      app:
+        condition: service_healthy
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      TRADING_DUEL_DOMAIN: ${TRADING_DUEL_DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  trading_duel_data:
+  caddy_data:
+  caddy_config:
