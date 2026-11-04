@@ -19,6 +19,14 @@
 .compact-arena .scoreboard { flex: none; height: 72px; margin: 0; grid-template-columns: minmax(0,1fr) 130px minmax(0,1fr); gap: 10px; }
 .compact-arena .player-card { min-height: 0; padding: 8px 12px; display: grid; grid-template-columns: minmax(0,1fr) auto; grid-template-rows: 1fr auto; column-gap: 8px; row-gap: 5px; border-radius: 14px; }
 .compact-arena .player-card-top { grid-column: 1; grid-row: 1; gap: 6px; margin: 0; }
+.compact-arena .player-identity > div { min-width: 0; }
+.compact-arena .player-pnl { display: flex; align-items: center; gap: 4px; min-width: 0; flex: 0 1 160px; justify-content: flex-end; }
+.compact-arena .player-pnl svg { width: clamp(36px, 6vw, 98px); min-width: 23px; height: 28px; flex-shrink: 1; }
+.compact-arena .player-pnl-zero { stroke: #62596b; stroke-width: 1; stroke-dasharray: 2 3; }
+.compact-arena .player-pnl span { font-size: 11px; font-weight: 650; font-variant-numeric: tabular-nums; white-space: nowrap; }
+@media (max-width: 850px) {
+  .compact-arena .player-pnl span { font-size: 9px; }
+}
 .compact-arena .player-identity { min-width: 0; gap: 7px; }
 .compact-arena .player-avatar { width: 25px; height: 25px; font-size: 10px; border-radius: 8px; }
 .compact-arena .player-name { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 170px; }
@@ -117,16 +125,38 @@
 .compact-arena .market-card {
   transition: border-color 150ms ease-out, box-shadow 150ms ease-out, background-color 150ms ease-out;
 }
-.market-selection-badge { animation: selection-label 140ms ease-out; }
-@keyframes selection-label { from { opacity: 0; } to { opacity: 1; } }
-.compact-arena .trading-docks { flex: none; height: 96px; gap: 10px; margin: 0; }
-.compact-arena .trade-dock { padding: 7px 10px; min-height: 0; border-radius: 14px; }
-.compact-arena .dock-top { height: 22px; gap: 6px; margin-bottom: 4px; }
-.compact-arena .margin-control { gap: 5px; }
+.compact-arena .trading-docks { flex: none; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) clamp(110px, 22vw, 350px); min-height: 102px; gap: 10px; margin: 0; }
+.arena-controller-guide { display: flex; align-items: center; justify-content: center; gap: 12px; min-width: 0; padding: 8px 12px; background: #0b0b0d; border: 1px solid #303035; border-radius: 12px; text-align: left; color: #f5f4f6; }
+.arena-controller-guide:hover { border-color: #55545e; background: #141418; }
+.arena-controller-guide .controller-art { flex: 0 1 108px; width: 33%; min-width: 56px; height: auto; max-height: 76px; margin: 0; }
+.arena-controller-copy { display: grid; gap: 3px; min-width: 0; }
+.arena-controller-copy strong { font-size: 11px; font-weight: 750; }
+.arena-controller-copy small { font-size: 9px; color: #aaa8b1; }
+.arena-controller-bindings { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 9px; color: #dedce3; }
+.arena-controller-bindings > span { white-space: nowrap; }
+.arena-controller-bindings kbd { padding: 1px 3px; margin-right: 2px; border-radius: 3px; background: #1d1d22; color: #dfdde4; border-color: #34343c; font-size: inherit; }
+.arena-controller-bindings .guide-long { background: #193b32; color: #a8e8cf; border-color: #34574b; }
+.arena-controller-bindings .guide-short { background: #4b2633; color: #ffc0d0; border-color: #734655; }
+@media (max-width: 1050px) {
+  .compact-arena .trading-docks { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 92px; }
+  .arena-controller-guide { flex-direction: column; gap: 0; padding: 4px; text-align: center; }
+  .arena-controller-guide .controller-art { flex: 0 1 auto; width: 68px; }
+  .arena-controller-copy strong { font-size: 9px; }
+  .arena-controller-copy small, .arena-controller-bindings { display: none; }
+  .compact-arena .margin-control > span:first-child { display: none; }
+}
+.compact-arena .trade-dock { display: flex; flex-direction: column; gap: 6px; padding: 8px 10px; min-width: 0; min-height: 0; border-radius: 12px; }
+.compact-arena .dock-top { min-height: 25px; gap: 7px; margin: 0; }
+.dock-player { display: inline-flex; flex: none; align-items: center; gap: 5px; color: #c3c1cc; font-size: 9px; font-weight: 650; }
+.compact-arena .dock-player .dock-avatar { width: 22px; height: 22px; border-radius: 50%; }
+.compact-arena .dock-symbol { flex: none; }
+.compact-arena .margin-control { gap: 5px; flex: none; }
+.compact-arena .margin-control > strong { min-width: 40px; }
 .compact-arena .trade-buttons { gap: 6px; }
-.compact-arena .trade-button { min-height: 28px; padding: 4px 7px; font-size: 11px; gap: 5px; }
-.compact-arena .dock-bottom { min-height: 20px; margin-top: 4px; gap: 6px; }
-.compact-arena .dock-bottom > span { font-size: 9px; }
+.compact-arena .trade-button { min-height: 30px; padding: 4px 7px; font-size: 11px; gap: 5px; }
+.compact-arena .dock-bottom { min-height: 20px; margin: auto 0 0; gap: 6px; }
+.compact-arena .dock-bottom > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; }
+.compact-arena .dock-bottom .ready-button { flex: none; }
 .compact-arena .ready-button { min-height: 22px; padding: 4px 10px; font-size: 10px; }
 .arena-utility-bar { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 12px; height: 24px; color: var(--muted); font-size: 9px; }
 .arena-utility-bar > div { display: flex; align-items: center; gap: 10px; }
@@ -220,9 +250,11 @@
   .compact-arena .coin-title strong { font-size: 14px; }
   .compact-arena .market-price-row { min-height: 40px; }
   .compact-arena .market-price-row > strong { font-size: 28px; }
-  .compact-arena .trading-docks { grid-template-columns: minmax(0,1fr); height: 96px; gap: 0; }
+  .compact-arena .trading-docks { grid-template-columns: minmax(0,1fr) 54px; min-height: 96px; gap: 5px; }
+  .arena-controller-guide .controller-art { width: 43px; min-width: 0; }
+  .compact-arena .trade-button { padding-inline: 4px; gap: 3px; font-size: 10px; }
   .compact-arena .trade-dock { display: none; }
-  .compact-arena .trade-dock.active-dock { display: block; }
+  .compact-arena .trade-dock.active-dock { display: flex; }
   .arena-utility-bar { height: 22px; gap: 4px; font-size: 8px; }
   .arena-utility-bar a { max-width: 152px; font-size: 7px; }
   .arena-utility-bar > div { gap: 4px; }
@@ -252,9 +284,8 @@
   .compact-arena .market-price-row > strong { font-size: 26px; }
   .compact-arena .market-grid .market-chart,.compact-arena .market-grid .chart-empty { flex: 1; min-height: 48px; }
   .compact-arena .market-card-footer { margin-inline: 14px; height: 19px; min-height: 19px; }
-  .compact-arena .trading-docks { flex: none; height: clamp(86px, 13vh, 104px); gap: 12px; }
+  .compact-arena .trading-docks { flex: none; gap: 12px; }
   .compact-arena .trade-dock { padding: 8px 12px; border-radius: 16px; }
-  .compact-arena .dock-top { margin-bottom: 6px; }
   .compact-arena .trade-button { min-height: 31px; }
   .arena-utility-bar { height: 22px; }
 }
@@ -266,13 +297,21 @@
   .compact-arena .player-card { padding: 6px 11px; }
   .compact-arena .player-status,.compact-arena .player-metrics { display: none; }
   .compact-arena .section-heading { height: 27px; min-height: 27px; }
-  .compact-arena .trading-docks { height: 92px; }
-  .compact-arena .trade-dock { display: flex; flex-direction: column; justify-content: space-between; min-height: 0; padding: 5px 10px; }
-  .compact-arena .dock-top { flex: none; height: 20px; margin: 0 0 3px; }
+  .compact-arena .trading-docks { min-height: 92px; }
+  .compact-arena .trade-dock { gap: 4px; padding: 5px 10px; }
+  .compact-arena .dock-top { flex: none; }
   .compact-arena .trade-buttons { flex: none; gap: 6px; }
   .compact-arena .trade-button { min-height: 27px; padding-block: 3px; }
   .compact-arena .dock-bottom { flex: none; min-height: 20px; margin: 2px 0 0; justify-content: flex-end; }
   .compact-arena .dock-bottom > span { display: none; }
   .compact-arena .ready-button { min-height: 20px; padding: 3px 10px; }
   .arena-utility-bar { height: 18px; align-items: center; }
+}
+
+@media (max-width: 430px) {
+  .compact-arena .trade-dock.active-dock { padding-inline: 6px; }
+  .compact-arena .dock-player > span:not(.dock-avatar), .compact-arena .dock-symbol strong > span,
+  .compact-arena .margin-control .leverage-badge, .compact-arena .trade-button > svg { display: none; }
+  .compact-arena .dock-top, .compact-arena .trade-buttons { gap: 4px; }
+  .compact-arena .trade-button { font-size: 9px; }
 }

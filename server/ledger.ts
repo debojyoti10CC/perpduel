@@ -6,6 +6,7 @@ import { compileContract } from './compile.ts';
 const USD = 1e8;
 const QTY = 1e18;
 const ACTIONS: TradeAction[] = ['long', 'short', 'half', 'close'];
+type ContractLedgerInfo = Exclude<LedgerInfo, { mode: 'paper' }>;
 const ERRORS: Record<string, string> = { Unauthorized: 'Only the match relayer can update this ledger.', InvalidMatch: 'Match is not open in the ledger.', InvalidClock: 'The ledger clock does not permit this operation.', NotActive: 'This duel is outside its trading window.', StaleQuote: 'Quote is older than five seconds, ahead of the deadline, or out of order.', InvalidQuote: 'A real bid, ask and mark are required for all six markets.', InvalidNonce: 'This action was already processed or arrived out of order.', Disabled: 'The account reached its $200 risk floor.', InsufficientMargin: 'Not enough available margin including spread, slippage and fees.', NoPosition: 'There is no position to close on this market.', InvalidOrder: 'This order is not supported.' };
 
 export interface LedgerOptions {
@@ -17,10 +18,10 @@ export interface LedgerOptions {
 export interface TradeResult { snapshot: LedgerSnapshot; txHash: string; fill?: { quantity: number; price: number; fee: number }; fills?: { action: TradeAction; quantity: number; price: number; fee: number }[] }
 
 export class Ledger {
-  readonly info: LedgerInfo;
+  readonly info: ContractLedgerInfo;
   private queue: Promise<unknown> = Promise.resolve();
   private lastQuotes = new Map<string, Quote[]>();
-  constructor(private contract: Contract, info: LedgerInfo, private disconnect?: () => Promise<void>, private prepareBlock?: () => Promise<void>) { this.info = info; }
+  constructor(private contract: Contract, info: ContractLedgerInfo, private disconnect?: () => Promise<void>, private prepareBlock?: () => Promise<void>) { this.info = info; }
   private queued<T>(work: () => Promise<T>): Promise<T> {
     const next = this.queue.then(work).catch(error => { throw this.friendly(error); });
     this.queue = next.catch(() => undefined);
@@ -136,7 +137,7 @@ export async function createLedger(options: LedgerOptions = {}): Promise<Ledger>
   if (!options.mode && process.env.LEDGER_MODE && !['local-evm', 'monad'].includes(process.env.LEDGER_MODE)) throw new Error('LEDGER_MODE must be local-evm or monad.');
   const mode = options.mode ?? (process.env.LEDGER_MODE === 'monad' ? 'monad' : 'local-evm');
   const artifact = compileContract();
-  let signer: Signer, contract: Contract, info: LedgerInfo, disconnect: (() => Promise<void>) | undefined, prepareBlock: (() => Promise<void>) | undefined;
+  let signer: Signer, contract: Contract, info: ContractLedgerInfo, disconnect: (() => Promise<void>) | undefined, prepareBlock: (() => Promise<void>) | undefined;
   if (mode === 'monad') {
     const { RPC_URL, OPERATOR_PRIVATE_KEY, CONTRACT_ADDRESS } = process.env;
     if (!RPC_URL || !OPERATOR_PRIVATE_KEY || !CONTRACT_ADDRESS) throw new Error('LEDGER_MODE=monad requires RPC_URL, OPERATOR_PRIVATE_KEY and CONTRACT_ADDRESS. Keep the operator key only on the server.');

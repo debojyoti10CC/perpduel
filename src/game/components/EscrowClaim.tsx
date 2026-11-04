@@ -2,10 +2,11 @@ import { useState } from 'react';
 import { ArrowRight, Check, ExternalLink, LoaderCircle, Wallet } from 'lucide-react';
 import { cancelEscrowRoom, connectMonadWallet, readEscrowBalance, readEscrowRoom, refundEscrowRoom, resolveEscrowRoom, withdrawEscrowCredit } from '../../hooks/monadWallet.js';
 import { apiOrigin } from '../hooks/useDuel';
+import './EscrowClaim.css';
 
-interface Props { code: string; contractAddress: string; roomId: string; voided: boolean }
+interface Props { code: string; contractAddress: string; roomId: string; voided: boolean; buttonClassName?: string }
 
-export default function EscrowClaim({ code, contractAddress, roomId, voided }: Props) {
+export default function EscrowClaim({ code, contractAddress, roomId, voided, buttonClassName = 'button button-primary' }: Props) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState('');
   const [error, setError] = useState('');
@@ -60,7 +61,7 @@ export default function EscrowClaim({ code, contractAddress, roomId, voided }: P
   return <section className="arena-claim" aria-label="Monad testnet settlement">
     <div><Wallet size={17}/><strong>{voided ? 'Return your test MON' : 'Settle your test MON stake'}</strong><span>MONAD TESTNET</span></div>
     <p>Settlement credits the winning wallet or refunds a voided round. Withdrawal is a separate wallet confirmation; testnet gas applies.</p>
-    <button className="button button-primary" disabled={busy} onClick={claim}>{busy ? <LoaderCircle size={15} className="spin"/> : complete ? <Check size={15}/> : <Wallet size={15}/>} {busy ? 'Waiting for wallet…' : complete ? 'Check withdrawal' : voided ? 'Resolve & refund' : 'Resolve & withdraw'} {!busy && <ArrowRight size={15}/>}</button>
+    <button className={buttonClassName} disabled={busy} onClick={claim}>{busy ? <LoaderCircle size={15} className="spin"/> : complete ? <Check size={15}/> : <Wallet size={15}/>} {busy ? 'Waiting for wallet…' : complete ? 'Check withdrawal' : voided ? 'Resolve & refund' : 'Resolve & withdraw'} {!busy && <ArrowRight size={15}/>}</button>
     {status && <p className="arena-claim-status" role="status">{status}</p>}
     {error && <p className="arena-claim-error" role="alert">{error}</p>}
     {transactionHash && <a className="arena-claim-receipt" href={`https://testnet.monadvision.com/tx/${transactionHash}`} target="_blank" rel="noreferrer">View confirmed transaction <ExternalLink size={12}/></a>}

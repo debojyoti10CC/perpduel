@@ -19,7 +19,7 @@ function ConnectedApp() {
     loadSession().then(value => { if (active) setSession(value); }).catch(() => { if (active) setFailure(true); });
     return () => { active = false; };
   }, [attempt]);
-  if (!session) return <div className="room-loading"><strong>PERPDUEL</strong><span>{failure ? 'The room server is restarting.' : 'Connecting to the arena…'}</span>{failure && <button onClick={() => setAttempt(n => n + 1)}>Reconnect</button>}</div>;
+  if (!session) return <div className="room-loading"><strong>PERPDUEL</strong><span>{failure ? 'Could not reach the room server.' : 'Connecting to the arena…'}</span>{failure && <button onClick={() => setAttempt(n => n + 1)}>Reconnect</button>}</div>;
   return <Suspense fallback={<div className="room-loading">Opening the arena…</div>}>{location.pathname.startsWith('/arena') ? <Arena /> : <App initialSession={session} />}</Suspense>;
 }
 createRoot(document.getElementById('root')).render(<React.StrictMode><ConnectedApp /></React.StrictMode>);

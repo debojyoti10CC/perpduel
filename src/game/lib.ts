@@ -2,6 +2,15 @@ import type { Account, Candle, Coin } from '../../shared/types';
 export const money = (value: number, digits = 2) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
 export const price = (value: number) => !Number.isFinite(value) || value <= 0 ? '—' : money(value, value < 1 ? 5 : value < 10 ? 4 : 2);
 export const signed = (value: number) => `${value >= 0 ? '+' : '−'}${money(Math.abs(value))}`;
+export function isBelowOrderMargin(available: number, margin: number, quantity: number, side: 'long' | 'short'): boolean {
+  // An opposite order releases the existing position's margin before the ledger checks the new entry.
+  const reversesPosition = side === 'long' ? quantity < 0 : quantity > 0;
+  return !reversesPosition && available < margin;
+}
+// getRandomValues is also available when the arena is served over HTTP on a LAN.
+export function newClientId(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)), byte => byte.toString(16).padStart(2, '0')).join('');
+}
 export const compact = (value: number) => new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
 export const shortHash = (value: string) => value ? `${value.slice(0, 7)}…${value.slice(-5)}` : 'Pending';
 export const names: Record<Coin, string> = { BTC: 'Bitcoin', ETH: 'Ethereum', SOL: 'Solana', XRP: 'XRP', DOGE: 'Dogecoin', AVAX: 'Avalanche' };

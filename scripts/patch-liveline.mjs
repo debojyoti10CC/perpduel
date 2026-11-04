@@ -311,6 +311,70 @@ async function patchDistFile(filePath) {
         }
     }
 
+    // Include every open-position level in the same price scale as the market line.
+    const entryLevelReplacements = [
+        [
+            'if (referenceValue !== void 0) {',
+            'for (const referenceValue of reference?.levels?.map(level => level.value) ?? (reference ? [reference.value] : [])) {',
+        ],
+        ['function computeRange(visible, currentValue, referenceValue, exaggerate)', 'function computeRange(visible, currentValue, reference, exaggerate)'],
+        ['cfg.referenceLine?.value, cfg.exaggerate', 'cfg.referenceLine, cfg.exaggerate'],
+        [
+            'drawReferenceLine(ctx, layout, palette, opts.referenceLine);',
+            'if (opts.referenceLine.levels) drawEntryLevels(ctx, layout, opts.referenceLine.levels);\n    else drawReferenceLine(ctx, layout, palette, opts.referenceLine);',
+        ],
+    ];
+    for (const [old, replacement] of entryLevelReplacements) {
+        if (next.includes(replacement)) continue;
+        if (!next.includes(old)) {
+            console.warn(`[patch-liveline] Entry-level pattern not found: ${filePath}`);
+            ok = false;
+            continue;
+        }
+        next = next.replaceAll(old, replacement);
+        didChange = true;
+    }
+    if (!next.includes('function drawEntryLevels(')) {
+        const anchor = 'function drawReferenceLine(ctx, layout, palette, ref) {';
+        const drawEntryLevels = [
+            'function drawEntryLevels(ctx, layout, levels) {',
+            '  const { w, h, pad, toY } = layout;',
+            '  for (const level of levels) {',
+            '    const y = Math.max(pad.top + 1, Math.min(h - pad.bottom - 1, toY(level.value)));',
+            '    ctx.save();',
+            '    ctx.strokeStyle = level.color;',
+            '    ctx.lineWidth = 1;',
+            '    ctx.setLineDash([5, 5]);',
+            '    ctx.lineDashOffset = level.align === "right" ? 5 : 0;',
+            '    ctx.beginPath();',
+            '    ctx.moveTo(pad.left, y);',
+            '    ctx.lineTo(w - pad.right, y);',
+            '    ctx.stroke();',
+            '    ctx.font = "600 10px Inter, system-ui, sans-serif";',
+            '    ctx.textAlign = level.align;',
+            '    ctx.textBaseline = "middle";',
+            '    const x = level.align === "left" ? pad.left + 4 : w - pad.right - 4;',
+            '    const labelY = y < (pad.top + h - pad.bottom) / 2 ? y + 9 : y - 9;',
+            '    ctx.strokeStyle = "#171717";',
+            '    ctx.lineWidth = 3;',
+            '    ctx.setLineDash([]);',
+            '    ctx.strokeText(level.label, x, labelY);',
+            '    ctx.fillStyle = level.color;',
+            '    ctx.fillText(level.label, x, labelY);',
+            '    ctx.restore();',
+            '  }',
+            '}',
+            '',
+        ].join('\n');
+        if (next.includes(anchor)) {
+            next = next.replace(anchor, drawEntryLevels + anchor);
+            didChange = true;
+        } else {
+            console.warn(`[patch-liveline] Entry-level drawing anchor not found: ${filePath}`);
+            ok = false;
+        }
+    }
+
     if (!didChange) return { ok, changed: false };
     await writeFile(filePath, next, 'utf8');
     console.log(`[patch-liveline] Patched: ${filePath}`);

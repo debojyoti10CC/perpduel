@@ -13,7 +13,9 @@ $env:HOST = '127.0.0.1'
 npm run dev
 ```
 
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The server connects to Hyperliquid market data and runs the game's separate local EVM ledger. For a production bundle, run `npm run build`, then start the Node server with `npm start`.
+Open [http://127.0.0.1:5173](http://127.0.0.1:5173). The game server executes paper orders using live Hyperliquid quotes. Set `LEDGER_MODE=local-evm` to use the optional local contract ledger. For a production bundle, run `npm run build`, then start the Node server with `npm start`.
+
+To play on two laptops, connect both to the same network and set `HOST=0.0.0.0` on the host before starting the server. Create an online room in the arena, then send its **Invite rival** link to the guest. Both players join the same server and ready up. Paper rooms require no wallet.
 
 ## Lobby and room flow
 

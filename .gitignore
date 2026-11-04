@@ -6,4 +6,7 @@ dist/
 .env
 data/
 artifacts/
+server/vercel-runtime.mjs
 
+.vercel
+.env*

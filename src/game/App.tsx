@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent, type MouseEvent } from 'react';
 import { Activity, ArrowDownLeft, ArrowRight, ArrowUpRight, Check, ChevronDown, ChevronLeft, ChevronRight, CircleHelp, Copy, Download, Expand, ExternalLink, Gamepad2, History, Info, Keyboard, Link2, LoaderCircle, LockKeyhole, Maximize2, Minus, Plus, Radio, RotateCcw, Settings2, ShieldCheck, Signal, Search, LayoutGrid, List, Swords, Trophy, Users, Volume2, VolumeX, WifiOff, X, Zap } from 'lucide-react';
 import { COINS, DEFAULT_ROUND_SECONDS, type InputAction, type Market, type LedgerInfo, type MatchState, type Player, type TradeAction } from '../../shared/types';
 import RoundDurationPicker from '../components/RoundDurationPicker.jsx';
-import { useDuel, apiOrigin, type Feedback } from './hooks/useDuel';
+import { useDuel, apiOrigin, sessionKey, type Feedback } from './hooks/useDuel';
 import { useControllers } from './hooks/useControllers';
 import { isNavigationAction, navigateMarket, type ArenaInput, type FeedbackKind, type MenuAction } from './input';
 import MarketChart from './components/MarketChart';
@@ -16,17 +16,20 @@ import MarketSearch from './components/MarketSearch';
 import MarketTable from './components/MarketTable';
 import NetworkStatus from './components/NetworkStatus';
 import EscrowClaim from './components/EscrowClaim';
+import Identicon from '../components/Identicon.jsx';
+import { copyInviteText, roomInvite } from './invite';
 import './styles.css';
 import './design-system.css';
 import './arena-layout.css';
 import './dark-arena.css';
-import { compact, downloadJSON, emptyAccount, money, names, price, shortHash, signed, useStorageValue } from './lib';
+import { compact, downloadJSON, emptyAccount, isBelowOrderMargin, money, names, newClientId, price, shortHash, signed, useStorageValue } from './lib';
 
 type Toast = { id: string; message: string; kind: string; seat?: number };
 type Dialog = 'rules' | 'controllers' | 'settings' | 'history' | 'result' | 'ledger' | 'network' | 'setup' | 'positions' | 'leave' | null;
-const controls = [ ['LB', 'Long / increase long', 'W', 'I'], ['RB', 'Short / increase short', 'S', 'K'], ['B', 'Close half', 'A', 'J'], ['Y', 'Close all', 'D', 'L'], ['← ↑ ↓ →', 'Move across markets', 'Q/E · R/F', 'Arrow keys'], ['R STICK', 'Scroll page / panels', 'Scroll', 'Scroll'], ['A / X', 'Adjust order margin', 'Z / C', 'U / O'], ['START', 'Ready up', 'Space', 'Enter'] ];
+const controls = [ ['LT', 'Long / increase long', 'W', 'I'], ['RT', 'Short / increase short', 'S', 'K'], ['B', 'Close half', 'A', 'J'], ['Y', 'Close all', 'D', 'L'], ['← ↑ ↓ →', 'Move across markets', 'Q/E · R/F', 'Arrow keys'], ['R STICK', 'Scroll page / panels', 'Scroll', 'Scroll'], ['A / X', 'Adjust order margin', 'Z / C', 'U / O'], ['START', 'Ready up', 'Space', 'Enter'] ];
 const statusNames: Record<MatchState['phase'], string> = { lobby: 'Waiting for ready', registering: 'Registering the duel', countdown: 'Get ready', active: 'Duel in progress', settling: 'Settling positions', finished: 'Duel complete', void: 'Duel voided' };
 const placeholderPlayer = (seat: number): Player => ({ ...emptyAccount(), name: seat === 0 ? 'You' : 'Your opponent', connected: false, ready: false, selected: seat === 0 ? 0 : 1, margin: 100 });
+const STARTING_EQUITY = emptyAccount().equity;
 
 function formatClock(seconds: number) {
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
@@ -68,8 +71,8 @@ export default function App() {
   const hapticRef = useRef<(seat: number, kind: FeedbackKind) => void>(() => undefined);
   const toastTimers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const notify = useCallback((message: string, kind = 'info', seat?: number) => {
-    if (/Not enough available margin/i.test(message)) message = 'Insufficient paper funds. Lower margin or close a position.';
-    const id = crypto.randomUUID(); setToasts(items => kind === 'reject' && items.some(item => item.kind === kind && item.seat === seat && item.message === message) ? items : [...items.slice(-3), { id, message, kind, seat }]);
+    if (/Not enough available margin/i.test(message)) message = 'Order needs more available margin after fees and spread. Lower the order margin or close a position.';
+    const id = newClientId(); setToasts(items => kind === 'reject' && items.some(item => item.kind === kind && item.seat === seat && item.message === message) ? items : [...items.slice(-3), { id, message, kind, seat }]);
     toastTimers.current.push(setTimeout(() => setToasts(items => items.filter(item => item.id !== id)), 4200));
   }, []);
   useEffect(() => () => toastTimers.current.forEach(clearTimeout), []);
@@ -90,8 +93,10 @@ export default function App() {
   const error = useCallback((message: string) => { setJoining(false); notify(message, 'reject'); }, [notify]);
   const duel = useDuel(feedback, error);
   const { state, markets, seats, send, connected } = duel;
+  const isTerminal = state?.phase === 'finished' || state?.phase === 'void';
+  const completedMatchId = isTerminal ? state.id : null;
   const practiceMode = new URLSearchParams(location.search).get('bot') === '1';
-  const inputSeats = practiceMode ? seats.filter(seat => seat === 0) : seats;
+  const inputSeats = useMemo(() => practiceMode ? seats.filter(seat => seat === 0) : seats, [practiceMode, seats]);
   useEffect(() => {
     if (!connected || state || !roomCode) return;
     let hasSession = false;
@@ -104,7 +109,7 @@ export default function App() {
 
   useEffect(() => {
     if (!practiceMode || state?.mode !== 'local' || state.phase !== 'lobby' || !seats.includes(1) || state.players[1].ready) return;
-    send({ type: 'action', id: crypto.randomUUID(), seat: 1, action: 'ready' });
+    send({ type: 'action', id: newClientId(), seat: 1, action: 'ready' });
   }, [practiceMode, state?.id, state?.phase, state?.players[1].ready, seats.join(','), send]);
   useEffect(() => {
     if (!practiceMode || state?.mode !== 'local' || state.phase !== 'active' || !seats.includes(1)) return;
@@ -118,16 +123,16 @@ export default function App() {
       const quote = currentMarkets.find(item => item.coin === COINS[marketIndex]);
       const serverTime = Date.now() + offsetRef.current;
       if (!quote?.available || quote.time > serverTime || serverTime - quote.time > 5000) return;
-      const sendBot = (action: InputAction, market?: number) => send({ type: 'action', id: crypto.randomUUID(), seat: 1, action, market });
+      const sendBot = (action: InputAction, market?: number) => send({ type: 'action', id: newClientId(), seat: 1, action, market });
       sendBot('select', marketIndex);
       const position = bot.positions.find(item => item.coin === quote.coin);
-      if (position && turn % 3 === 0) { sendBot('close'); return; }
+      if (position && turn % 3 === 0) { sendBot('close', marketIndex); return; }
       if (position || bot.availableMargin < 101) return;
       // The bot sees only the same received live marks shown to the player.
       const samples = quote.priceHistory?.filter(point => point.time <= serverTime / 1000 && point.time >= serverTime / 1000 - 25) ?? [];
       if (samples.length < 2) return;
       const direction = samples.at(-1)!.value >= samples[0].value ? 'long' : 'short';
-      sendBot(direction);
+      sendBot(direction, marketIndex);
     };
     const first = setTimeout(play, 4000);
     const timer = setInterval(play, 9000);
@@ -151,12 +156,12 @@ export default function App() {
       const origin = awaitingSelection ? pending.selected : current.players[seat].selected;
       let selected = market;
       if (input !== 'select') {
-        const grid = document.querySelector('.market-grid');
+        const grid = input === 'previous' || input === 'next' ? null : document.querySelector('.market-grid');
         const columns = grid ? getComputedStyle(grid).gridTemplateColumns.split(/\s+/).filter(Boolean).length : 1;
         selected = navigateMarket(origin, input, COINS.length, columns);
       }
       if (selected === undefined) return;
-      const id = crypto.randomUUID();
+      const id = newClientId();
       if (send({ type: 'action', id, seat, action: 'select', market: selected })) {
         pendingSelection.current.set(seat, { id, match: current.id, selected, at: Date.now(), acknowledged: false });
         refreshSelection(version => version + 1);
@@ -164,17 +169,10 @@ export default function App() {
       }
       return;
     }
-    if (awaitingSelection && ['long', 'short', 'half', 'close'].includes(input)) {
-      if (!pending.acknowledged || current.players[seat].selected !== pending.selected) {
-        const message = Date.now() - pending.at < 2000
-          ? 'Confirming market selection. Try again in a moment.'
-          : 'Market selection was not confirmed. Select a market again before trading.';
-        notify(message, 'reject', seat);
-        return;
-      }
-    }
-    send({ type: 'action', id: crypto.randomUUID(), seat, action: input, market });
-  }, [notify, send]);
+    const isTrade = input === 'long' || input === 'short' || input === 'half' || input === 'close';
+    const targetMarket = isTrade ? (awaitingSelection ? pending.selected : current.players[seat].selected) : market;
+    send({ type: 'action', id: newClientId(), seat, action: input, market: targetMarket });
+  }, [send]);
   const scrollWithController = useCallback((pixels: number) => {
     const panel = Array.from(document.querySelectorAll('.modal')).at(-1);
     if (panel) panel.scrollBy({top:pixels,behavior:'auto'});
@@ -240,14 +238,20 @@ export default function App() {
     return () => window.removeEventListener('keydown', key);
   }, []);
   useEffect(() => { if (seats.length === 1) setActiveSeat(seats[0]); }, [seats]);
-  const lastPhase = useRef('');
+  const shownResult = useRef<string | null>(null);
   useEffect(() => {
-    if (state?.phase !== lastPhase.current && (state?.phase === 'finished' || state?.phase === 'void')) {
-      setSearchOpen(false); setExpanded(null);
-      setDialog('result'); inputSeats.forEach(seat => controllers.vibrate(seat, 'result'));
+    if (!completedMatchId) {
+      setDialog(current => current === 'result' ? null : current);
+      return;
     }
-    lastPhase.current = state?.phase ?? '';
-  }, [state?.phase, seats, controllers.vibrate]);
+    if (leaving || shownResult.current === completedMatchId) return;
+    shownResult.current = completedMatchId;
+    inputSeats.forEach(seat => controllers.vibrate(seat, 'result'));
+    setSearchOpen(false);
+    setExpanded(null);
+    setDialog('result');
+  }, [completedMatchId, leaving, inputSeats, controllers.vibrate]);
+  const activePad = controllers.controllers.find(pad => pad.seat === activeSeat);
   const serverNow = now + duel.offset;
   const stakeState = state;
   const funding = stakeState?.funding;
@@ -273,8 +277,11 @@ export default function App() {
       ? { ...player, selected: pending.selected }
       : player;
   }) ?? [placeholderPlayer(0), placeholderPlayer(1)];
+  const avatarSeeds = [funding?.hostAddress || players[0].name, funding?.guestAddress || players[1].name];
   const selectedMarket = markets.find(m => m.coin === expanded);
   const isActive = state?.phase === 'active';
+  const finalSeconds = isActive && seconds > 0 && seconds <= 10;
+  const pnlElapsedMs = state?.startAt ? Math.max(0, Math.min(state.serverTime, state.endAt) - state.startAt) : 0;
   const allPositions = players.flatMap((p, seat) => p.positions.map(position => ({ ...position, seat })));
   const positionsByMarket: PositionsByMarket = {};
   if (isActive || state?.phase === 'settling') {
@@ -299,36 +306,51 @@ export default function App() {
   };
   const copyInvite = async () => {
     if (!state) return;
-    try { await navigator.clipboard.writeText(`${location.origin}/?room=${state.code}`); setCopied(true); toastTimers.current.push(setTimeout(() => setCopied(false), 1800)); }
-    catch { notify(`Room code: ${state.code}. Open this server on the other laptop and enter that code.`); }
+    const invite = await roomInvite(state.code, Boolean(state.funding));
+    if (await copyInviteText(invite)) {
+      setCopied(true);
+      toastTimers.current.push(setTimeout(() => setCopied(false), 1800));
+    } else notify(invite);
   };
   const openHistory = async () => {
     setDialog('history'); setHistoryStatus('Loading…');
     try { const response = await fetch(`${apiOrigin}/api/history`); if (!response.ok) throw new Error('Match history unavailable'); const data = await response.json(); setHistory(Array.isArray(data) ? data : data.matches ?? []); setHistoryStatus(''); }
     catch { setHistoryStatus('History unavailable. Check the server connection.'); }
   };
+  const lobbyHref = state?.funding ? `/?settled=${encodeURIComponent(state.id)}` : '/';
   const leaveToLobby = async () => {
+    if (isTerminal) {
+      try { sessionStorage.removeItem(sessionKey); } catch { /* Storage can be disabled. */ }
+      location.replace(lobbyHref);
+      return;
+    }
     setLeaving(true);
     const left = await duel.leave();
-    if (left) location.assign('/');
+    if (left) location.assign(lobbyHref);
     else { setLeaving(false); notify('The room did not confirm your departure. Reconnect and try again.', 'reject'); }
+  };
+  const openLobby = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!state) return;
+    event.preventDefault();
+    if (isTerminal) void leaveToLobby();
+    else setDialog('leave');
   };
   const fullscreen = async () => { try { if (document.fullscreenElement) await document.exitFullscreen(); else await document.documentElement.requestFullscreen(); } catch { notify('Fullscreen unavailable. Open in a browser.'); } };
 
-  return <div className={`app-shell compact-arena dark-arena${state ? ' in-match' : ''}${isActive && seconds <= 30 ? ' final-minute' : ''}`}>
+  return <div className={`app-shell compact-arena dark-arena${state ? ' in-match' : ''}${finalSeconds ? ' final-seconds' : ''}`}>
     <header className={`topbar${heroSearchVisible ? '' : ' has-scrolled'}`}>
-      <a href="/" className="brand-link" aria-label="PERPDUEL lobby" onClick={event => { if (state && !['finished', 'void'].includes(state.phase)) { event.preventDefault(); setDialog('leave'); } }}><Logo/></a>
+      <a href={lobbyHref} className="brand-link" aria-label="PERPDUEL lobby" onClick={openLobby}><Logo/></a>
       <button className="header-search-trigger" onClick={openMarketSearch} aria-label="Find markets"><Search size={17}/><span>Find markets...</span><kbd>⌘ K</kbd></button>
       <div className="header-right">
-        <nav aria-label="Main navigation"><a className="nav-item arena-lobby-link" href="/" onClick={event => { if (state && !['finished','void'].includes(state.phase)) { event.preventDefault(); setDialog('leave'); } }}><ChevronLeft size={15}/> Lobby</a><button className="nav-item" onClick={openHistory}><History size={15}/> History</button><button className="nav-item" onClick={() => setDialog('rules')}><CircleHelp size={15}/> Rules</button><button className="nav-item active" onClick={() => { setDialog(null); setExpanded(null); if (!state) setDialog('setup'); }}><Swords size={15}/> Arena</button></nav>
+        <nav aria-label="Main navigation"><a className="nav-item arena-lobby-link" href={lobbyHref} onClick={openLobby}><ChevronLeft size={15}/> Lobby</a><button className="nav-item" onClick={openHistory}><History size={15}/> History</button><button className="nav-item" onClick={() => setDialog('rules')}><CircleHelp size={15}/> Rules</button><button className="nav-item active" onClick={() => { setDialog(null); setExpanded(null); if (!state) setDialog('setup'); }}><Swords size={15}/> Arena</button></nav>
         <div className="topbar-tools"><span className={`connection-indicator ${feedHealthy ? 'online' : ''}`}><i/>{duel.source === 'test-fixture' ? 'TEST FIXTURE' : feedHealthy ? 'Live prices' : connected ? 'Feed offline' : 'Connecting'}</span><button className="icon-button" aria-label="Controller settings" onClick={() => setDialog('controllers')}><Gamepad2 size={19}/><span className="count-bubble">{controllers.controllers.length}</span></button><button className="icon-button" aria-label="Settings" onClick={() => setDialog('settings')}><Settings2 size={18}/></button><button className="icon-button fullscreen-button" aria-label="Toggle fullscreen" onClick={fullscreen}><Expand size={17}/></button></div>
       </div>
     </header>
     <main>
       {!state ? <section className="arena-welcome"><div><h1>New duel</h1><p>1–5 min · $1,000 paper funds each · 3×</p></div><div className="arena-start-actions"><button className="button" onClick={()=>setDialog('controllers')}><Gamepad2 size={16}/> Controllers</button><button className="button button-primary" onClick={()=>setDialog('setup')}>Create / join duel <ArrowRight size={16}/></button></div></section> : <>
-        <div className="match-topline"><span><Radio size={12}/> {practiceMode ? 'PRACTICE ARENA' : state.mode === 'local' ? 'SAME SCREEN' : 'ONLINE ARENA'}<span className="room-code">ROOM {state.code}</span>{state.mode === 'online' && <button className="text-button" onClick={copyInvite}>{copied ? <Check size={12}/> : <Copy size={12}/>} {copied ? 'Link copied' : 'Invite rival'}</button>}</span><button className="text-button" onClick={() => setDialog('ledger')}><ShieldCheck size={13}/>{state.ledger.mode === 'monad' ? 'Monad' : 'Local EVM'} ledger<ChevronRight size={13}/></button></div>
+        <div className="match-topline"><span><Radio size={12}/> {practiceMode ? 'PRACTICE ARENA' : state.mode === 'local' ? 'SAME SCREEN' : 'ONLINE ARENA'}<span className="room-code">ROOM {state.code}</span>{state.mode === 'online' && <button className="text-button" onClick={copyInvite}>{copied ? <Check size={12}/> : <Copy size={12}/>} {copied ? 'Link copied' : 'Invite rival'}</button>}</span><button className="text-button" onClick={() => setDialog('ledger')}><ShieldCheck size={13}/>{state.ledger.mode === 'monad' ? 'Monad' : state.ledger.mode === 'paper' ? 'Paper' : 'Local EVM'} ledger<ChevronRight size={13}/></button></div>
         <section className="scoreboard">
-          <PlayerCard player={players[0]} seat={0} owns={inputSeats.includes(0)} controller={controllers.controllers.some(c => c.seat === 0)} flash={flashes[0]} phase={state.phase} avatarSeed={funding?.hostAddress || players[0].name}/>
+          <PlayerCard key={`${state.id}:${state.startAt}:0`} elapsedMs={pnlElapsedMs} player={players[0]} seat={0} owns={inputSeats.includes(0)} controller={controllers.controllers.some(c => c.seat === 0)} flash={flashes[0]} phase={state.phase} avatarSeed={avatarSeeds[0]}/>
           <div className={`clock-card${isActive && seconds <= 30 ? ' urgent' : ''}`}>
             <div className="clock-top">
               <span className={isActive ? 'live-clock-label' : ''}>{isActive ? <><i/> DUEL LIVE</> : state.phase === 'countdown' ? 'STARTING IN' : 'ROUND TIMER'}</span>
@@ -336,9 +358,9 @@ export default function App() {
             </div>
             <div className="clock-number">{state.phase === 'countdown' ? <span className="countdown-number">{seconds || 'GO'}</span> : formatClock(seconds)}</div>
             <div className="clock-track"><i style={{ width: `${isActive ? seconds / Math.max(1, matchRoundSeconds) * 100 : state.phase === 'lobby' ? 100 : 0}%` }}/></div>
-            <span className="clock-phase">{waitingForRival ? 'Waiting for rival' : statusNames[state.phase]}</span>
+            <span className="clock-phase" role="status">{finalSeconds ? 'Final seconds' : waitingForRival ? 'Waiting for rival' : statusNames[state.phase]}</span>
           </div>
-          <PlayerCard player={players[1]} seat={1} owns={inputSeats.includes(1)} controller={controllers.controllers.some(c => c.seat === 1)} flash={flashes[1]} phase={state.phase} avatarSeed={funding?.guestAddress || players[1].name}/>
+          <PlayerCard key={`${state.id}:${state.startAt}:1`} elapsedMs={pnlElapsedMs} player={players[1]} seat={1} owns={inputSeats.includes(1)} controller={controllers.controllers.some(c => c.seat === 1)} flash={flashes[1]} phase={state.phase} avatarSeed={avatarSeeds[1]}/>
         </section>
         {state.phase === 'lobby' && <div className="lobby-banner"><div><span className="step-circle">1</span><strong>{players.every(p => p.connected) ? 'Ready' : 'Waiting for opponent'}</strong><span>{players.every(p => p.connected) ? 'Both players must ready up.' : 'Share the room code.'}</span></div><button className="text-button" onClick={() => setDialog('controllers')}><Gamepad2 size={14}/> Controller check<ArrowRight size={13}/></button></div>}
         {['registering', 'settling'].includes(state.phase) && <div className="status-banner"><LoaderCircle size={16} className="spin"/>{state.phase === 'registering' ? 'Setting up accounts.' : 'Closing positions and settling scores.'}</div>}
@@ -369,11 +391,78 @@ export default function App() {
       </div>
       {!feedHealthy && <div className="feed-warning"><Signal size={14}/>{duel.source === 'test-fixture' ? 'TEST DATA — These fixture prices are for automated verification only.' : !connected ? 'Connecting to the match server. Trading is unavailable until the connection is restored.' : 'Waiting for fresh exchange quotes. Orders stay blocked while data is missing or more than 5 seconds old.'}</div>}
       {duel.source === 'test-fixture' && <div className="fixture-ribbon">AUTOMATED TEST FIXTURE · NOT LIVE MARKET DATA</div>}
-      {marketView==='list' ? <MarketTable markets={markets} players={state ? players : undefined} positionsByMarket={positionsByMarket} onSelect={selectMarket} now={serverNow}/> : <div className="market-grid">{COINS.map(coin => { const market = markets.find(m => m.coin === coin); const fresh = Boolean(market?.available && market.time > serverNow - 5000); const positions = positionsByMarket[coin] ?? []; const selections = state ? players.map((p, i) => p.selected === COINS.indexOf(coin) ? i : -1).filter(i => i !== -1) : []; return <article key={coin} data-market={coin} className={`market-card${(state ? COINS[players[activeSeat].selected] : focusedCoin)===coin?' mobile-focus':''}${selections.includes(0) ? ' selected-p1' : ''}${selections.includes(1) ? ' selected-p2' : ''}`}><div className="market-card-header"><button className="coin-title" onClick={() => state && inputSeats.includes(activeSeat) ? action(activeSeat, 'select', COINS.indexOf(coin)) : setExpanded(coin)} aria-label={marketPositionLabel(`Select ${coin} for player ${activeSeat + 1}`, positions)}><CoinIcon coin={coin}/><div><div className="market-symbol-line"><strong>{coin}<span>/ USD</span><span className="perp-badge">PERP</span></strong><MarketPositionMarkers positions={positions} /></div><small>{names[coin]}</small></div></button><div className="market-card-right"><span className={`market-change${(market?.change24h ?? 0) < 0 ? ' negative' : ' positive'}`}>{market?.available ? `${market.change24h >= 0 ? '+' : ''}${market.change24h.toFixed(2)}%` : '—'}</span><button className="icon-button expand-chart-button" aria-label={`Expand ${coin} chart and order book`} onClick={() => setExpanded(coin)}><Maximize2 size={13}/></button></div></div><div className="market-price-row"><strong className={fresh ? '' : 'unavailable-price'}>{price(market?.mark ?? 0)}</strong><div className="market-ownership">{selections.map(seat=><span key={seat} className={`market-selection-badge p${seat+1}`} title={`${players[seat].name}'s selected market`}>P{seat+1} SELECTED</span>)}<span className={`quote-status${fresh ? ' fresh' : ''}`}><i/>{fresh ? 'LIVE' : market?.mark ? 'STALE' : 'CONNECTING'}</span></div></div>{market && market.mark > 0 ? <MarketChart market={market} minutes={minutes} now={serverNow}/> : <div className="chart-empty"><span className="empty-chart-line"/><Activity size={22}/><span>Waiting for prices</span></div>}<div className="market-card-footer"><span>VOL <b>{market?.volume24h ? `$${compact(market.volume24h)}` : '—'}</b></span><span>Last {minutes}m</span></div></article>; })}</div>}</section>
+      {marketView==='list' ? <MarketTable markets={markets} players={state ? players : undefined} positionsByMarket={positionsByMarket} onSelect={selectMarket} now={serverNow}/> : <div className="market-grid">{COINS.map(coin => { const market = markets.find(m => m.coin === coin); const fresh = Boolean(market?.available && market.time > serverNow - 5000); const positions = positionsByMarket[coin] ?? []; const selections = state ? players.map((p, i) => p.selected === COINS.indexOf(coin) ? i : -1).filter(i => i !== -1) : []; return <article key={coin} data-market={coin} className={`market-card${(state ? COINS[players[activeSeat].selected] : focusedCoin)===coin?' mobile-focus':''}${selections.includes(0) ? ' selected-p1' : ''}${selections.includes(1) ? ' selected-p2' : ''}`}><div className="market-card-header"><button className="coin-title" onClick={() => state && inputSeats.includes(activeSeat) ? action(activeSeat, 'select', COINS.indexOf(coin)) : setExpanded(coin)} aria-label={marketPositionLabel(`Select ${coin} for player ${activeSeat + 1}`, positions)}><CoinIcon coin={coin}/><div><div className="market-symbol-line"><strong>{coin}<span>/ USD</span><span className="perp-badge">PERP</span></strong><MarketPositionMarkers positions={positions} /></div><small>{names[coin]}</small></div></button><div className="market-card-right"><span className={`market-change${(market?.change24h ?? 0) < 0 ? ' negative' : ' positive'}`}>{market?.available ? `${market.change24h >= 0 ? '+' : ''}${market.change24h.toFixed(2)}%` : '—'}</span><button className="icon-button expand-chart-button" aria-label={`Expand ${coin} chart and order book`} onClick={() => setExpanded(coin)}><Maximize2 size={13}/></button></div></div><div className="market-price-row"><strong className={fresh ? '' : 'unavailable-price'}>{price(market?.mark ?? 0)}</strong><div className="market-ownership">{selections.map(seat=><span key={seat} className={`market-selection-badge p${seat+1}`} title={`${players[seat].name}'s selected market`}>P{seat+1} SELECTED</span>)}<span className={`quote-status${fresh ? ' fresh' : ''}`}><i/>{fresh ? 'LIVE' : market?.mark ? 'STALE' : 'CONNECTING'}</span></div></div>{market && market.mark > 0 ? <MarketChart market={market} minutes={minutes} now={serverNow} positions={positions}/> : <div className="chart-empty"><span className="empty-chart-line"/><Activity size={22}/><span>Waiting for prices</span></div>}<div className="market-card-footer"><span>VOL <b>{market?.volume24h ? `$${compact(market.volume24h)}` : '—'}</b></span><span>Last {minutes}m</span></div></article>; })}</div>}</section>
 
-      {state && <><section className="trading-docks" aria-label="Player trade controls">{players.map((player, seat) => { const own = inputSeats.includes(seat), coin = COINS[player.selected], quote = markets.find(m => m.coin === coin), fresh = Boolean(quote?.available && quote.time > serverNow - 5000), canTrade = own && connected && isActive && !player.disabled && fresh; const position = player.positions.find(p => p.coin === coin); return <div className={`trade-dock player-${seat}${seat===activeSeat?' active-dock':''}`} key={seat}><div className="dock-top"><span className={`seat-marker p${seat+1}`}>P{seat+1}</span><div className="dock-symbol"><button disabled={!own} aria-label={`Player ${seat+1} previous market`} onClick={() => action(seat,'previous')}><ChevronLeft size={15}/></button><strong>{coin}<span>-PERP</span></strong><button disabled={!own} aria-label={`Player ${seat+1} next market`} onClick={() => action(seat,'next')}><ChevronRight size={15}/></button></div><div className="margin-control"><span>PAPER MARGIN</span><button disabled={!own || player.margin <= 100} onClick={() => action(seat,'marginDown')} aria-label={`Decrease player ${seat+1} order margin`}><Minus size={13}/></button><strong>{money(player.margin,0)}</strong><button disabled={!own || player.margin >= 500} onClick={() => action(seat,'marginUp')} aria-label={`Increase player ${seat+1} order margin`}><Plus size={13}/></button><span className="leverage-badge">3×</span></div></div><div className="trade-buttons"><button className="trade-button long" disabled={!canTrade} onClick={() => action(seat,'long')}><span className="pad-key lb">LB</span>Long <ArrowUpRight size={15}/></button><button className="trade-button short" disabled={!canTrade} onClick={() => action(seat,'short')}><span className="pad-key rb">RB</span>Short <ArrowDownLeft size={15}/></button><button className="trade-button close-half" disabled={!canTrade || !position} onClick={() => action(seat,'half')}><span className="pad-key b">B</span>Close ½</button><button className="trade-button close-all" disabled={!canTrade || !position} onClick={() => action(seat,'close')}><span className="pad-key y">Y</span>Close all</button></div><div className="dock-bottom"><span>{player.disabled ? 'Risk floor reached. Account locked this round.' : !own ? 'Controlled by your opponent' : isActive ? fresh ? `Paper available ${money(player.availableMargin)} · virtual exposure ${money(player.margin*3,0)}` : 'Stale quote — trading blocked' : ['finished','void'].includes(state.phase) ? 'View results to start a rematch.' : 'Press START or ready up to begin'}</span>{state.phase === 'lobby' && <button className={`ready-button${player.ready ? ' is-ready' : ''}`} disabled={!own || !player.connected} onClick={() => action(seat,'ready')}>{player.ready ? <><Check size={13}/> Ready</> : <>Ready up <ArrowRight size={13}/></>}</button>}</div></div>; })}</section>
+      {state && <><section className="trading-docks" aria-label="Player trade controls">
+        {players.map((player, seat) => {
+          const own = inputSeats.includes(seat);
+          const coin = COINS[player.selected];
+          const quote = markets.find(market => market.coin === coin);
+          const fresh = Boolean(quote?.available && quote.time > serverNow - 5000);
+          const canTrade = own && connected && isActive && !player.disabled && fresh;
+          const position = player.positions.find(item => item.coin === coin);
+          const longBlocked = isBelowOrderMargin(player.availableMargin, player.margin, position?.quantity ?? 0, 'long');
+          const shortBlocked = isBelowOrderMargin(player.availableMargin, player.margin, position?.quantity ?? 0, 'short');
+          const tightMargin = longBlocked || shortBlocked;
+          const onChain = state.ledger.mode !== 'paper';
+          const dockStatus = player.disabled ? 'Risk floor reached'
+            : !own ? 'Opponent controls'
+            : isActive ? !fresh ? 'Waiting for a fresh quote'
+              : tightMargin ? money(player.availableMargin) + ' available · lower margin to add exposure'
+              : money(player.availableMargin) + ' available · ' + money(player.margin * 3, 0) + ' exposure'
+            : isTerminal ? 'Round complete'
+            : state.phase === 'lobby' ? 'Press Start or ready up' : statusNames[state.phase];
+
+          return <div className={'trade-dock player-' + seat + (seat === activeSeat ? ' active-dock' : '')} key={seat}>
+            <div className="dock-top">
+              <div className="dock-player" title={player.name}>
+                <Identicon seed={avatarSeeds[seat]} className="dock-avatar" />
+                <span>P{seat + 1}</span>
+              </div>
+              <div className="dock-symbol">
+                <button disabled={!own} aria-label={'Player ' + (seat + 1) + ' previous market'} onClick={() => action(seat, 'previous')}><ChevronLeft size={15}/></button>
+                <strong>{coin}<span>-PERP</span></strong>
+                <button disabled={!own} aria-label={'Player ' + (seat + 1) + ' next market'} onClick={() => action(seat, 'next')}><ChevronRight size={15}/></button>
+              </div>
+              <div className="margin-control">
+                <span>Margin</span>
+                <button disabled={!own || player.margin <= 100} onClick={() => action(seat, 'marginDown')} aria-label={'Decrease player ' + (seat + 1) + ' order margin'}><Minus size={13}/></button>
+                <strong>{money(player.margin, 0)}</strong>
+                <button disabled={!own || player.margin >= 500} onClick={() => action(seat, 'marginUp')} aria-label={'Increase player ' + (seat + 1) + ' order margin'}><Plus size={13}/></button>
+                <span className="leverage-badge">3×</span>
+              </div>
+            </div>
+            <div className="trade-buttons">
+              <button className="trade-button long" disabled={!canTrade || onChain && longBlocked} onClick={() => action(seat, 'long')}><span className="pad-key lt">LT</span>Long <ArrowUpRight size={14}/></button>
+              <button className="trade-button short" disabled={!canTrade || onChain && shortBlocked} onClick={() => action(seat, 'short')}><span className="pad-key rt">RT</span>Short <ArrowDownLeft size={14}/></button>
+              <button className="trade-button close-half" disabled={!canTrade || !position} onClick={() => action(seat, 'half')}><span className="pad-key b">B</span>Close ½</button>
+              <button className="trade-button close-all" disabled={!canTrade || !position} onClick={() => action(seat, 'close')}><span className="pad-key y">Y</span>Close all</button>
+            </div>
+            <div className="dock-bottom">
+              <span className={canTrade && tightMargin ? 'order-margin-warning' : undefined}>{dockStatus}</span>
+              {state.phase === 'lobby' && <button className={'ready-button' + (player.ready ? ' is-ready' : '')} disabled={!own || !player.connected} onClick={() => action(seat, 'ready')}>
+                {player.ready ? <><Check size={13}/> Ready</> : <>Ready up <ArrowRight size={13}/></>}
+              </button>}
+            </div>
+          </div>;
+        })}
+        <button type="button" className="arena-controller-guide" aria-label="Open controller setup and controls" onClick={() => setDialog('controllers')}>
+          <ControllerArt active={activePad?.buttons} axis={activePad?.axis} verticalAxis={activePad?.verticalAxis} rightAxis={activePad?.rightAxis}/>
+          <span className="arena-controller-copy">
+            <strong>Controller controls</strong>
+            <span className="arena-controller-bindings">
+              <span><kbd className="guide-long">LT</kbd> Long</span>
+              <span><kbd className="guide-short">RT</kbd> Short</span>
+              <span><kbd>B</kbd> Close ½</span>
+              <span><kbd>Y</kbd> Close all</span>
+            </span>
+            <small>A / X: margin − / + · Start: ready</small>
+            <small>L stick / D-pad: move · R stick: scroll</small>
+          </span>
+        </button>
+      </section>
       </>}
-      <footer className="arena-utility-bar"><div>{state ? <><button onClick={()=>{setTapeTab('positions');setDialog('positions');}}>Positions <b>{allPositions.length}</b></button><button onClick={()=>{setTapeTab('fills');setDialog('positions');}}>Trades <b>{state.fills.length}</b></button><button onClick={()=>setDialog('result')} disabled={!['finished','void'].includes(state.phase)}>Results</button></> : null}</div><span className="arena-control-hint">L stick / D-pad: move · LB: long · RB: short · A/X: margin · B/Y: close · Start: ready</span><a href="https://github.com/benjitaylor/liveline" target="_blank" rel="noreferrer">Liveline</a></footer>
+      <footer className="arena-utility-bar"><div>{state ? <><button onClick={()=>{setTapeTab('positions');setDialog('positions');}}>Positions <b>{allPositions.length}</b></button><button onClick={()=>{setTapeTab('fills');setDialog('positions');}}>Trades <b>{state.fills.length}</b></button><button onClick={()=>setDialog('result')} disabled={!['finished','void'].includes(state.phase)}>Results</button></> : null}</div><a href="https://github.com/benjitaylor/liveline" target="_blank" rel="noreferrer">Liveline</a></footer>
     </main>
 
     {dialog === 'leave' && <Modal title="Return to the lobby?" onClose={() => setDialog(null)}><p className="arena-leave-copy">{state?.phase === 'lobby' ? 'This closes your current room. A funded testnet room can be resolved for a refund.' : 'Leaving ends this round for both players. A funded testnet room can be resolved for a refund after it is voided.'}</p><div className="modal-actions"><button className="button" onClick={() => setDialog(null)}>Stay in arena</button><button className="button button-primary" disabled={leaving} onClick={leaveToLobby}>{leaving ? <><LoaderCircle size={15} className="spin"/> Leaving…</> : <>Leave room <ArrowRight size={15}/></>}</button></div></Modal>}
@@ -403,13 +492,31 @@ export default function App() {
         </form>
       </div>
     </Modal>}
-    {dialog === 'positions' && state && <Modal title="Positions and trades" onClose={()=>setDialog(null)} wide><section className="positions-panel"><div className="positions-header"><div className="panel-tabs"><button className={tapeTab === 'positions' ? 'selected' : ''} onClick={() => setTapeTab('positions')}>Open positions<span>{allPositions.length}</span></button><button className={tapeTab === 'fills' ? 'selected' : ''} onClick={() => setTapeTab('fills')}>Trade tape<span>{state.fills.length}</span></button></div><span><span className="blue-dot"/> CONFIRMED LEDGER STATE</span></div>{tapeTab === 'positions' ? allPositions.length ? <div className="table-scroll"><table><thead><tr><th>PLAYER / MARKET</th><th>SIDE</th><th>SIZE</th><th>ENTRY</th><th>PAPER MARGIN</th><th>PAPER P&L</th></tr></thead><tbody>{allPositions.map(pos => <tr key={`${pos.seat}-${pos.coin}`}><td><span className={`seat-marker small p${pos.seat+1}`}>P{pos.seat+1}</span><strong>{pos.coin}-PERP</strong></td><td><span className={pos.quantity>0?'positive':'negative'}>{pos.quantity>0?'LONG':'SHORT'}</span><span className="table-leverage">3×</span></td><td>{Math.abs(pos.quantity).toFixed(5)} {pos.coin}</td><td>{price(pos.entry)}</td><td>{money(pos.margin)}</td><td className={pos.unrealizedPnl>=0?'positive':'negative'}>{signed(pos.unrealizedPnl)}</td></tr>)}</tbody></table></div> : <div className="empty-positions"><Activity size={22}/><div><strong>No open positions</strong></div></div> : state.fills.length ? <div className="table-scroll"><table><thead><tr><th>TIME</th><th>PLAYER / MARKET</th><th>ACTION</th><th>EXECUTION</th><th>FEE</th><th>TRANSACTION</th></tr></thead><tbody>{state.fills.slice(0,50).map(fill => <tr key={fill.id}><td>{new Date(fill.time).toLocaleTimeString()}</td><td><span className={`seat-marker small p${fill.seat+1}`}>P{fill.seat+1}</span>{fill.coin}</td><td className={fill.action==='long'?'positive':fill.action==='short'?'negative':''}>{fill.action.toUpperCase()}</td><td>{price(fill.price)}</td><td>{money(fill.fee,4)}</td><td><button className="hash-button" onClick={() => { navigator.clipboard.writeText(fill.txHash).then(()=>notify('Transaction hash copied.')).catch(()=>notify(fill.txHash)); }}>{shortHash(fill.txHash)} <Copy size={11}/></button></td></tr>)}</tbody></table></div> : <div className="empty-positions"><History size={22}/><div><strong>No trades</strong></div></div>}</section></Modal>}
+    {dialog === 'positions' && state && <Modal title="Positions and trades" onClose={()=>setDialog(null)} wide><section className="positions-panel"><div className="positions-header"><div className="panel-tabs"><button className={tapeTab === 'positions' ? 'selected' : ''} onClick={() => setTapeTab('positions')}>Open positions<span>{allPositions.length}</span></button><button className={tapeTab === 'fills' ? 'selected' : ''} onClick={() => setTapeTab('fills')}>Trade tape<span>{state.fills.length}</span></button></div><span><span className="blue-dot"/> CONFIRMED LEDGER STATE</span></div>{tapeTab === 'positions' ? allPositions.length ? <div className="table-scroll"><table><thead><tr><th>PLAYER / MARKET</th><th>SIDE</th><th>SIZE</th><th>ENTRY</th><th>PAPER MARGIN</th><th>PAPER P&L</th></tr></thead><tbody>{allPositions.map(pos => <tr key={`${pos.seat}-${pos.coin}`}><td><span className={`seat-marker small p${pos.seat+1}`}>P{pos.seat+1}</span><strong>{pos.coin}-PERP</strong></td><td><span className={pos.quantity>0?'positive':'negative'}>{pos.quantity>0?'LONG':'SHORT'}</span><span className="table-leverage">3×</span></td><td>{Math.abs(pos.quantity).toFixed(5)} {pos.coin}</td><td>{price(pos.entry)}</td><td>{money(pos.margin)}</td><td className={pos.unrealizedPnl>=0?'positive':'negative'}>{signed(pos.unrealizedPnl)}</td></tr>)}</tbody></table></div> : <div className="empty-positions"><Activity size={22}/><div><strong>No open positions</strong></div></div> : state.fills.length ? <div className="table-scroll"><table><thead><tr><th>TIME</th><th>PLAYER / MARKET</th><th>ACTION</th><th>EXECUTION</th><th>FEE</th><th>TRANSACTION</th></tr></thead><tbody>{state.fills.slice(0,50).map(fill => <tr key={fill.id}><td>{new Date(fill.time).toLocaleTimeString()}</td><td><span className={`seat-marker small p${fill.seat+1}`}>P{fill.seat+1}</span>{fill.coin}</td><td className={fill.action==='long'?'positive':fill.action==='short'?'negative':''}>{fill.action.toUpperCase()}</td><td>{price(fill.price)}</td><td>{money(fill.fee,4)}</td><td>{fill.txHash ? <button className="hash-button" onClick={() => { void (async () => { try { if (await copyInviteText(fill.txHash!)) notify('Transaction hash copied.'); else notify(fill.txHash!); } catch { notify('Could not copy transaction hash.'); } })(); }}>{shortHash(fill.txHash)} <Copy size={11}/></button> : 'Paper fill'}</td></tr>)}</tbody></table></div> : <div className="empty-positions"><History size={22}/><div><strong>No trades</strong></div></div>}</section></Modal>}
     <NetworkStatus stakeContract={funding?.contractAddress} open={dialog==='network'} ledger={state?.ledger??ledgerInfo} onClose={()=>setDialog(null)}/>
     <MarketSearch open={searchOpen} markets={markets} onClose={()=>setSearchOpen(false)} onSelect={selectMarket}/>
     {(dialog === 'rules') && <Modal title="Rules" onClose={() => setDialog(null)} wide><div className="rules-summary"><div><strong>$1,000</strong><span>Starting paper funds</span></div><div><strong>3×</strong><span>Fixed leverage</span></div><div><strong>{state ? formatClock(matchRoundSeconds) : '1–5 min'}</strong><span>Round length</span></div></div><div className="rules-columns"><div><h3>Scoring</h3><div className="score-formula">Final equity − $1,000<br/><span>− 0.35 × maximum drawdown</span></div><p>Higher score wins. Lower drawdown breaks a tie; otherwise, draw.</p><h3>Execution</h3><ul className="rules-list"><li>Each player has one paper account across all six markets.</li><li>Order margin: $100, $250, or $500, subject to available funds and fees.</li><li>Buying executes at the ask plus 1 basis point. Selling executes at the bid minus 1 basis point.</li><li>Fees are 0.05% of executed notional per fill. Funding is zero.</li><li>Changing sides closes the old position before opening the new one.</li><li>At $200 equity or less, the account automatically closes and is disabled.</li><li>At the deadline, both accounts close against the same fresh snapshot. An extended outage voids the duel.</li></ul></div><div><h3>Controls</h3><div className="control-table"><div className="control-table-head"><span>ACTION</span><span>GAMEPAD</span><span>P1 KEYS</span><span>P2 KEYS</span></div>{controls.map(([pad,label,k1,k2])=><div key={pad}><span>{label}</span><kbd>{pad}</kbd><kbd>{k1}</kbd><kbd>{k2}</kbd></div>)}</div><p className="fine-print">Remote players can use P1 keys. Move diagonally with the left stick or two adjacent D-pad directions. Recenter or release between moves. In menus, A confirms and B goes back. Held trade buttons do not repeat.</p><div className="rules-note"><Info size={17}/><span>Trades use paper funds. A funded room's test MON stake settles separately. The operator supplies market prices.</span></div></div></div><div className="modal-actions"><button className="button" onClick={() => setDialog('controllers')}><Gamepad2 size={16}/> Controllers</button><button className="button button-primary" onClick={() => setDialog(null)}>Done <ArrowRight size={16}/></button></div></Modal>}
     {dialog === 'controllers' && <Modal title="Controllers" subtitle="Connect a controller and press a button." onClose={() => setDialog(null)} wide><div className="controller-grid">{[0,1].map(seat => { const pad = controllers.controllers.find(c=>c.seat===seat) ?? (!state ? controllers.controllers[seat] : undefined); return <div className={`controller-slot player-${seat}`} key={seat}><div className="controller-slot-heading"><span className={`seat-marker p${seat+1}`}>P{seat+1}</span><strong>{players[seat].name}</strong><span className={`status-tag${pad ? ' ready':''}`}>{pad ? 'CONNECTED':'KEYBOARD READY'}</span></div><ControllerArt active={pad?.buttons} axis={pad?.axis} verticalAxis={pad?.verticalAxis} rightAxis={pad?.rightAxis}/><h3>{pad ? pad.id.split('(')[0].trim() : 'Not connected'}</h3><p>{pad ? pad.mapping === 'standard' ? 'Standard mapping' : 'Unsupported mapping. Use a standard controller or keyboard.' : 'USB or Bluetooth.'}</p><div className="controller-slot-bottom"><Keyboard size={14}/><span>{seat===0?'Q E / R F · W S A D · Z C · Space':'← ↑ ↓ → · I K J L · U O · Enter'}</span>{pad && <button className="text-button" onClick={()=>controllers.vibrate(seat,'fill')}>Test vibration <Activity size={12}/></button>}</div></div>; })}</div>{controllers.controllers.length>0 && state && <div className="assignment-list">{controllers.controllers.map(pad=><label key={pad.index}><Gamepad2 size={15}/><span>{pad.id}</span><select aria-label={`Assign controller ${pad.index+1}`} value={pad.seat??''} onChange={e=>controllers.assign(pad.index,e.target.value===''?null:Number(e.target.value))}><option value="">Unassigned</option>{seats.map(s=><option key={s} value={s}>Player {s+1}</option>)}</select></label>)}</div>}<div className="rules-note"><Info size={17}/><span>{controllers.supported ? 'Keep this page focused. Vibration depends on your controller and browser.' : 'Gamepad unavailable. Use Chrome or Edge on localhost or HTTPS, or use the keyboard.'}</span></div>{controllers.lastInput && <p className="last-input">LAST INPUT <b>P{controllers.lastInput.seat+1} / {controllers.lastInput.action.toUpperCase()}</b></p>}<div className="modal-actions"><button className="text-button" onClick={()=>setDialog('rules')}>Controls <ChevronRight size={14}/></button><button className="button button-primary" onClick={()=>setDialog(null)}>Done <ArrowRight size={16}/></button></div></Modal>}
     {dialog === 'settings' && <Modal title="Settings" onClose={()=>setDialog(null)}><div className="setting-row"><div><h3>Controller vibration</h3><p>Fills, rejections, risk and countdown cues.</p></div><span className="setting-value">{Math.round(intensity*100)}%</span></div><input className="range-input" type="range" min="0" max="1" step="0.05" aria-label="Vibration intensity" value={intensity} onChange={e=>setIntensity(Number(e.target.value))}/><div className="range-labels"><span>Off</span><span>Full intensity</span></div><div className="setting-row setting-divider"><div><h3>Sound feedback</h3><p>Action and timer cues.</p></div><button className={`toggle${sound?' on':''}`} role="switch" aria-checked={sound} aria-label="Sound feedback" onClick={()=>setSound(!sound)}><span/></button></div><div className="setting-row setting-divider"><div><h3>Display</h3></div><button className="button button-small" onClick={fullscreen}><Expand size={14}/> Fullscreen</button></div>{state && <div className="setting-row setting-divider"><div><h3>Leave this room</h3>{isActive&&<p>Leaving voids this duel for both players.</p>}</div><button className="button button-small danger-button" onClick={()=>setDialog('leave')}>Leave room</button></div>}</Modal>}
-    {dialog === 'ledger' && state && <Modal title="Ledger" onClose={()=>setDialog(null)}><div className="ledger-network"><ShieldCheck size={24}/><div><h3>{state.ledger.mode==='monad'?'Monad':'Local EVM'} paper ledger</h3><p>Chain ID {state.ledger.chainId} · {state.ledger.mode==='local-evm'?'Local contract':'Operator connected'}</p></div><span className="status-tag ready">CONNECTED</span></div><dl className="ledger-details"><dt>Contract</dt><dd>{state.ledger.contractAddress}</dd><dt>Relayer</dt><dd>{state.ledger.relayerAddress}</dd><dt>Match ID</dt><dd>{state.id}</dd><dt>Latest transaction</dt><dd>{state.txHash??'No transaction yet'}</dd></dl><ReceiptViewer hash={state.txHash}/><p className="fine-print">The operator supplies Hyperliquid quotes; the contract applies paper trading rules.{state.ledger.mode==='local-evm'?' Local receipts reset when the server stops.':''}</p><button className="button" onClick={()=>downloadJSON(state,`trading-duel-${state.code}.json`)}><Download size={15}/> Export</button></Modal>}
+    {dialog === 'ledger' && state && <Modal title="Ledger" onClose={() => setDialog(null)}>
+      <div className="ledger-network">
+        <ShieldCheck size={24}/>
+        <div>
+          <h3>{state.ledger.mode === 'paper' ? 'Paper ledger' : state.ledger.mode === 'monad' ? 'Monad paper ledger' : 'Local EVM paper ledger'}</h3>
+          <p>{state.ledger.mode === 'paper' ? 'Simulated fills use live Hyperliquid prices.' : 'Chain ID ' + state.ledger.chainId}</p>
+        </div>
+      </div>
+      <dl className="ledger-details">
+        <dt>Match ID</dt><dd>{state.id}</dd>
+        {state.ledger.mode !== 'paper' && <>
+          <dt>Contract</dt><dd>{state.ledger.contractAddress}</dd>
+          <dt>Relayer</dt><dd>{state.ledger.relayerAddress}</dd>
+          <dt>Latest transaction</dt><dd>{state.txHash ?? 'No transaction yet'}</dd>
+        </>}
+      </dl>
+      {state.ledger.mode !== 'paper' && <ReceiptViewer hash={state.txHash}/>}
+      <button className="button" onClick={()=>downloadJSON(state, 'trading-duel-' + state.code + '.json')}><Download size={15}/> Export</button>
+    </Modal>}
     {dialog === 'history' && (
       <Modal
         title="History"
@@ -466,10 +573,10 @@ export default function App() {
         )}
       </Modal>
     )}
-    {dialog === 'result' && state && (
+    {dialog === 'result' && state && isTerminal && (
       <Modal
-        title={state.phase === 'void' ? 'Duel voided' : state.winner === null ? 'Duel drawn' : 'Duel results'}
-        subtitle={state.phase === 'void' ? state.reason : undefined}
+        title={state.phase === 'void' ? 'Duel voided' : state.winner === null ? 'Duel drawn' : `${state.players[state.winner].name} wins`}
+        subtitle={state.phase === 'void' ? state.reason : `Final scoresheet · ${formatClock(matchRoundSeconds)} round`}
         headingIcon={<span className="result-heading-icon" aria-hidden="true">
           {state.phase === 'void' ? <WifiOff size={19} /> : <Trophy size={19} />}
         </span>}
@@ -494,11 +601,13 @@ export default function App() {
                 <dl className="result-breakdown">
                   {!voided && <>
                     <div><dt>Final equity</dt><dd>{money(player.equity)}</dd></div>
-                    <div><dt>Starting funds</dt><dd>− $1,000.00</dd></div>
+                    <div><dt>Starting equity</dt><dd>{money(STARTING_EQUITY)}</dd></div>
+                    <div><dt>Net paper P&amp;L</dt><dd>{signed(player.equity - STARTING_EQUITY)}</dd></div>
                     <div><dt>Drawdown penalty × 0.35</dt><dd>− {money(player.maxDrawdown * .35)}</dd></div>
                   </>}
                   <div><dt>Maximum drawdown</dt><dd>{money(player.maxDrawdown)}</dd></div>
                   <div><dt>Paper fees</dt><dd>{money(player.fees, 4)}</dd></div>
+                  <div><dt>Trade fills</dt><dd>{state.fills.filter(fill => fill.seat === seat).length}</dd></div>
                 </dl>
               </section>
             );
@@ -526,24 +635,25 @@ export default function App() {
           voided={state.phase === 'void' || state.winner === null}
         />}
         {state.phase === 'finished' && <div className="result-note">
-          <ShieldCheck size={14} /> Settled · {state.ledger.mode === 'local-evm' ? 'Local ledger' : 'Monad'}
+          <ShieldCheck size={14} /> Settled · {state.ledger.mode === 'monad' ? 'Monad' : 'Paper ledger'}
         </div>}
         <div className="modal-actions">
+          <button className="button" onClick={() => { setTapeTab('fills'); setDialog('positions'); }}>
+            <History size={15} /> View trades
+          </button>
           <button className="button" onClick={() => downloadJSON(state, `duel-${state.code}.json`)}>
             <Download size={15} /> Export
           </button>
-          <button className="button button-primary" disabled={leaving} onClick={() => {
-            if (funding) { void leaveToLobby(); return; }
-            send({ type: 'rematch' });
-            setDialog(null);
-          }}>
-            {leaving ? <LoaderCircle size={15} className="spin" /> : <RotateCcw size={15} />}
-            {funding ? 'New funded duel' : 'Rematch'}
+          <button className={`button${roomStake ? ' button-primary' : ''}`} onClick={leaveToLobby}>
+            <ChevronLeft size={15} /> Lobby
           </button>
+          {!roomStake && <button className="button button-primary" disabled={!connected} onClick={() => send({ type: 'rematch' })}>
+            <RotateCcw size={15} /> Rematch
+          </button>}
         </div>
       </Modal>
     )}
-    {expanded && <Modal title={`${expanded} / USD`} subtitle={`${names[expanded as keyof typeof names]} · Hyperliquid`} onClose={()=>setExpanded(null)} wide><>{selectedMarket && !selectedMarket.available && <div className="feed-warning"><Signal size={14}/> Stale price. Orders blocked.</div>}</><div className="expanded-price"><CoinIcon coin={expanded}/><strong>{price(selectedMarket?.mark??0)}</strong><span className={(selectedMarket?.change24h??0)>=0?'positive':'negative'}>{(selectedMarket?.change24h??0).toFixed(2)}% <small>24H</small></span><div className="timeframes" role="group" aria-label="Time window">{[1,5,15].map(m=><button key={m} className={minutes===m?'selected':''} onClick={()=>setMinutes(m)}>{m}m</button>)}</div></div>{selectedMarket && selectedMarket.mark>0?<MarketChart market={selectedMarket} minutes={minutes} now={serverNow} expanded/>:<div className="chart-empty">Prices unavailable</div>}<div className="depth-heading"><h3>Order book</h3><span>Spread {selectedMarket?price(selectedMarket.ask-selectedMarket.bid):'—'} · snapshot {selectedMarket?new Date(selectedMarket.time).toLocaleTimeString():'unavailable'}</span></div><div className="depth-grid">{(['bids','asks'] as const).map(side=><div key={side}><div className="depth-table-head"><span>{side==='bids'?'BID PRICE':'ASK PRICE'} (USD)</span><span>SIZE ({expanded})</span><span>TOTAL</span></div>{selectedMarket?.[side]?.length?selectedMarket[side].slice(0,8).map((level,index,all)=>{const total=all.slice(0,index+1).reduce((sum,l)=>sum+l.size,0),max=all.reduce((sum,l)=>sum+l.size,0);return <div className={`depth-row ${side}`} key={`${side}-${index}`} style={{'--depth':`${Math.min(100,total/max*100)}%`} as CSSProperties}><span>{price(level.price)}</span><span>{level.size.toFixed(4)}</span><span>{total.toFixed(4)}</span></div>;}):<p className="depth-unavailable">Order-book data unavailable.</p>}</div>)}</div></Modal>}
+    {expanded && <Modal title={`${expanded} / USD`} subtitle={`${names[expanded as keyof typeof names]} · Hyperliquid`} onClose={()=>setExpanded(null)} wide><>{selectedMarket && !selectedMarket.available && <div className="feed-warning"><Signal size={14}/> Stale price. Orders blocked.</div>}</><div className="expanded-price"><CoinIcon coin={expanded}/><strong>{price(selectedMarket?.mark??0)}</strong><span className={(selectedMarket?.change24h??0)>=0?'positive':'negative'}>{(selectedMarket?.change24h??0).toFixed(2)}% <small>24H</small></span><div className="timeframes" role="group" aria-label="Time window">{[1,5,15].map(m=><button key={m} className={minutes===m?'selected':''} onClick={()=>setMinutes(m)}>{m}m</button>)}</div></div>{selectedMarket && selectedMarket.mark>0?<MarketChart market={selectedMarket} minutes={minutes} now={serverNow} positions={positionsByMarket[selectedMarket.coin]} expanded/>:<div className="chart-empty">Prices unavailable</div>}<div className="depth-heading"><h3>Order book</h3><span>Spread {selectedMarket?price(selectedMarket.ask-selectedMarket.bid):'—'} · snapshot {selectedMarket?new Date(selectedMarket.time).toLocaleTimeString():'unavailable'}</span></div><div className="depth-grid">{(['bids','asks'] as const).map(side=><div key={side}><div className="depth-table-head"><span>{side==='bids'?'BID PRICE':'ASK PRICE'} (USD)</span><span>SIZE ({expanded})</span><span>TOTAL</span></div>{selectedMarket?.[side]?.length?selectedMarket[side].slice(0,8).map((level,index,all)=>{const total=all.slice(0,index+1).reduce((sum,l)=>sum+l.size,0),max=all.reduce((sum,l)=>sum+l.size,0);return <div className={`depth-row ${side}`} key={`${side}-${index}`} style={{'--depth':`${Math.min(100,total/max*100)}%`} as CSSProperties}><span>{price(level.price)}</span><span>{level.size.toFixed(4)}</span><span>{total.toFixed(4)}</span></div>;}):<p className="depth-unavailable">Order-book data unavailable.</p>}</div>)}</div></Modal>}
     <div className="toast-stack" aria-live="polite" aria-atomic="false">{toasts.map(toast=><div className={`toast toast-${toast.kind}`} key={toast.id}>{toast.kind==='reject'?<Info size={16}/>:toast.kind==='fill'?<Check size={16}/>:<Activity size={16}/>}<span>{toast.seat!==undefined&&<b className={`p${toast.seat+1}`}>P{toast.seat+1} </b>}{toast.message}</span><button aria-label="Dismiss notification" onClick={()=>setToasts(items=>items.filter(item=>item.id!==toast.id))}><X size={13}/></button></div>)}</div>
   </div>;
 }

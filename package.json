@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx server/index.ts",
     "build": "tsc --noEmit && vite build",
+    "build:vercel-server": "esbuild server/index.ts --bundle --platform=node --format=esm --packages=external --target=node22 --outfile=server/vercel-runtime.mjs",
     "preview": "vite preview --host 127.0.0.1",
     "start": "tsx server/index.ts --production",
     "test": "tsx --test --test-concurrency=1 tests/*.test.ts",
@@ -14,24 +15,25 @@
     "postinstall": "node scripts/patch-liveline.mjs"
   },
   "dependencies": {
-    "react": "^19.2.0",
-    "react-dom": "^19.2.0",
     "dotenv": "16.6.1",
     "ethers": "6.15.0",
     "ganache": "7.9.2",
     "liveline": "0.0.7",
     "lucide-react": "0.468.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
     "solc": "0.8.30",
     "ws": "8.18.3"
   },
   "devDependencies": {
-    "@vitejs/plugin-react": "^5.1.0",
-    "vite": "^7.2.0",
     "@types/node": "22.19.0",
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@types/ws": "8.18.1",
+    "@vitejs/plugin-react": "^5.1.0",
+    "esbuild": "0.28.2",
     "tsx": "4.20.6",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vite": "^7.2.0"
   }
 }

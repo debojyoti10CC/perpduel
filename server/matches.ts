@@ -9,11 +9,17 @@ import { EscrowService } from './escrow.ts';
 import { roomKey } from '../shared/escrow.ts';
 import { ZeroAddress, getAddress } from 'ethers';
 
+export interface MatchTradeResult {
+  snapshot: LedgerSnapshot;
+  txHash?: string;
+  fill?: { quantity: number; price: number; fee: number };
+  fills?: { action: TradeAction; quantity: number; price: number; fee: number }[];
+}
 export interface MatchLedger {
   info: LedgerInfo;
   create(id: string, startAt: number, endAt: number): Promise<LedgerSnapshot>;
   update(id: string, quotes: Quote[]): Promise<LedgerSnapshot>;
-  trade(id: string, seat: number, market: number, action: TradeAction, margin: number, nonce: number, quotes: Quote[]): Promise<{ snapshot: LedgerSnapshot; txHash: string; fill?: { quantity: number; price: number; fee: number }; fills?: { action: TradeAction; quantity: number; price: number; fee: number }[] }>;
+  trade(id: string, seat: number, market: number, action: TradeAction, margin: number, nonce: number, quotes: Quote[]): Promise<MatchTradeResult>;
   settle(id: string, quotes: Quote[]): Promise<LedgerSnapshot>;
   void(id: string, reason?: string): Promise<void>;
   read(id: string): Promise<LedgerSnapshot>;
@@ -35,6 +41,8 @@ interface Room {
   finalSnapshot?: Quote[];
   visibility: 'public' | 'private';
   createdAt: number;
+  pendingRecord?: MatchState;
+  recordWrite?: Promise<void>;
 }
 const ACTIONS = new Set<InputAction>(['long', 'short', 'half', 'close', 'previous', 'next', 'marginDown', 'marginUp', 'ready', 'select']);
 export const blankAccount = (): Account => ({ cash: 1000, equity: 1000, realizedPnl: 0, unrealizedPnl: 0, fees: 0, reservedMargin: 0, availableMargin: 1000, peakEquity: 1000, maxDrawdown: 0, score: 0, disabled: false, positions: [], nonce: 0 });
@@ -280,18 +288,36 @@ export class MatchManager {
     if (p.disabled) throw new Error('Risk floor reached. This account is locked for the round.');
     const quotes = this.feed.quotes();
     if (!quotes) throw new Error('Market data is unavailable or older than five seconds. Order blocked.');
-    const result = await this.ledger.trade(room.state.id, seat, p.selected, action, p.margin, p.nonce + 1, quotes);
+    const marketIndex = market ?? p.selected;
+    if (!Number.isInteger(marketIndex) || marketIndex < 0 || marketIndex >= COINS.length) throw new Error('Unknown order market');
+    const coin = COINS[marketIndex];
+    let result: MatchTradeResult;
+    try {
+      result = await this.ledger.trade(room.state.id, seat, marketIndex, action, p.margin, p.nonce + 1, quotes);
+    } catch (error) {
+      if (this.ledger.info.mode === 'paper') {
+        this.apply(room, await this.ledger.read(room.state.id));
+        this.broadcast(room);
+        this.persistPaperOrder(room);
+      }
+      throw error;
+    }
     this.apply(room, result.snapshot);
     const fills = result.fills ?? (result.fill ? [{ action, ...result.fill }] : []);
     if (fills.length) {
-      for (const fill of fills) room.state.fills.unshift({ id: randomUUID(), time: Date.now(), seat, coin: COINS[p.selected], ...fill, txHash: result.txHash });
+      for (const fill of fills) room.state.fills.unshift({ id: randomUUID(), time: Date.now(), seat, coin, ...fill, txHash: result.txHash });
       room.state.fills = room.state.fills.slice(0, 200);
       const completed = fills.some(fill => fill.action === action);
-      const message = !completed && p.disabled ? `${COINS[p.selected]} position closed. Risk floor prevents new exposure.` : `${COINS[p.selected]} ${action === 'long' ? 'long filled' : action === 'short' ? 'short filled' : action === 'half' ? 'half closed' : 'position closed'}`;
+      const message = !completed && p.disabled ? `${coin} position closed. Risk floor prevents new exposure.` : `${coin} ${action === 'long' ? 'long filled' : action === 'short' ? 'short filled' : action === 'half' ? 'half closed' : 'position closed'}`;
       this.feedback(room, seat, p.disabled ? 'risk' : 'fill', message, inputId);
     } else this.feedback(room, seat, 'risk', 'The ledger applied a risk closure. No new order was filled.', inputId);
-    await this.persist(room);
-    this.broadcast(room);
+    if (this.ledger.info.mode === 'paper') {
+      this.broadcast(room);
+      this.persistPaperOrder(room);
+    } else {
+      await this.persist(room);
+      this.broadcast(room);
+    }
   }
   private async begin(room: Room): Promise<void> {
     const funding = room.state.funding;
@@ -444,7 +470,21 @@ export class MatchManager {
     await rename(temporary, file);
   }
   private persist(room: Room): Promise<void> { return this.writeRecord(room.state, true); }
+  private persistPaperOrder(room: Room): void {
+    room.pendingRecord = structuredClone(room.state);
+    if (room.recordWrite) return;
+    room.recordWrite = (async () => {
+      while (room.pendingRecord) {
+        const record = room.pendingRecord;
+        room.pendingRecord = undefined;
+        try { await this.writeRecord(record, true); }
+        catch (error) { console.error('Could not save active paper match:', readableError(error)); }
+      }
+      room.recordWrite = undefined;
+    })();
+  }
   private async finishRecord(room: Room): Promise<void> {
+    await room.recordWrite;
     room.state.serverTime = Date.now();
     await this.writeRecord(room.state, false);
     await rm(path.join(this.options.dataDir, 'active', `${room.state.id}.json`), { force: true });
@@ -456,7 +496,7 @@ export class MatchManager {
     if (this.tickTimer) clearInterval(this.tickTimer);
     if (this.broadcastTimer) clearInterval(this.broadcastTimer);
     await this.controlQueue;
-    for (const room of this.rooms.values()) await room.queue;
+    for (const room of this.rooms.values()) { await room.queue; await room.recordWrite; }
     for (const peer of this.peers) peer.ws.close(1001, 'Server stopping');
     await this.bank.close(); await this.escrow.close();
   }

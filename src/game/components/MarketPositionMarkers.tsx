@@ -1,7 +1,7 @@
 import { ArrowDown, ArrowUp } from 'lucide-react';
 import type { Coin, Position } from '../../../shared/types';
 
-type MarketPosition = Pick<Position, 'quantity'> & { seat: number };
+export type MarketPosition = Pick<Position, 'quantity' | 'entry'> & { seat: number };
 export type PositionsByMarket = Partial<Record<Coin, MarketPosition[]>>;
 
 const side = ({ quantity }: MarketPosition) => quantity > 0 ? 'long' : 'short';

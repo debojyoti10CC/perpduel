@@ -1,0 +1,11 @@
+.git
+.vercel
+node_modules
+dist
+data
+artifacts
+server/vercel-runtime.mjs
+.env
+.env.*
+!.env.example
+*.log

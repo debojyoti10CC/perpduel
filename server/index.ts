@@ -1,10 +1,13 @@
 import 'dotenv/config';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import type { AddressInfo } from 'node:net';
+import { networkInterfaces } from 'node:os';
 import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import path from 'node:path';
 import WebSocket, { WebSocketServer } from 'ws';
 import { createLedger } from './ledger.ts';
+import { PaperLedger } from './paperLedger.ts';
 import { FixtureFeed, HyperliquidFeed, type MarketFeed } from './markets.ts';
 import { MatchManager, send } from './matches.ts';
 import { randomBytes } from 'node:crypto';
@@ -12,10 +15,24 @@ import { getAddress, verifyMessage } from 'ethers';
 import { DEFAULT_ROUND_SECONDS, ROUND_DURATIONS } from '../shared/types.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export interface ServerOptions { port?: number; host?: string; production?: boolean; testMode?: boolean; feed?: MarketFeed; roundMs?: number; countdownMs?: number; recoveryMs?: number; outageMs?: number; dataDir?: string }
+export interface ServerOptions { port?: number; host?: string; production?: boolean; listen?: boolean; testMode?: boolean; feed?: MarketFeed; roundMs?: number; countdownMs?: number; recoveryMs?: number; outageMs?: number; dataDir?: string }
 const mimeTypes: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.ico': 'image/x-icon', '.json': 'application/json; charset=utf-8', '.woff2': 'font/woff2' };
 function json(response: ServerResponse, status: number, body: unknown): void { response.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff' }); response.end(JSON.stringify(body)); }
 const cookieToken = (request: IncomingMessage) => request.headers.cookie?.split(';').map(part => part.trim()).find(part => part.startsWith('perpduel_session='))?.slice('perpduel_session='.length);
+function lanOrigin(request: IncomingMessage, address: AddressInfo | string | null): string | null {
+  if (!/^(?:localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(request.headers.host ?? '')) return null;
+  if (!['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(request.socket.remoteAddress ?? '')) return null;
+  if (!address || typeof address === 'string' || !['0.0.0.0', '::'].includes(address.address)) return null;
+  const adapters = Object.entries(networkInterfaces()).sort(([a], [b]) =>
+    Number(/wi-?fi|wlan/i.test(b)) - Number(/wi-?fi|wlan/i.test(a)));
+  for (const [name, entries] of adapters) {
+    if (/virtual|vEthernet|loopback|tailscale|vpn/i.test(name)) continue;
+    const ip = entries?.find(entry => entry.family === 'IPv4' && !entry.internal &&
+      /^(?:10\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(entry.address));
+    if (ip) return `http://${ip.address}:${address.port}`;
+  }
+  return null;
+}
 function sameOrigin(request: IncomingMessage): boolean {
   if (request.headers['sec-fetch-site'] === 'cross-site') return false;
   if (!request.headers.origin) return true;
@@ -33,8 +50,10 @@ export async function startServer(options: ServerOptions = {}) {
   const testMode = options.testMode ?? process.env.TRADING_DUEL_TEST_MODE === '1';
   if (process.env.FEED_MODE === 'test' && !testMode) throw new Error('Test fixture data requires TRADING_DUEL_TEST_MODE=1. It is never enabled as a live-data fallback.');
   if (!testMode && (options.roundMs || options.countdownMs || process.env.ROUND_SECONDS || process.env.COUNTDOWN_SECONDS)) throw new Error('Custom match timing is restricted to explicit test mode');
-  const ledger = await createLedger(testMode ? { mode: 'local-evm' } : {});
-  const feed: MarketFeed = options.feed ?? (testMode && process.env.FEED_MODE === 'test' ? new FixtureFeed() : new HyperliquidFeed(ledger.info.mode === 'local-evm'));
+  const ledger = !testMode && (process.env.LEDGER_MODE || 'paper') === 'paper'
+    ? new PaperLedger()
+    : await createLedger(testMode ? { mode: 'local-evm' } : {});
+  const feed: MarketFeed = options.feed ?? (testMode && process.env.FEED_MODE === 'test' ? new FixtureFeed() : new HyperliquidFeed(ledger.info.mode !== 'monad'));
   if (feed.source === 'test-fixture' && !testMode) { await ledger.close(); throw new Error('Fixture feed requires explicit test mode'); }
   const roundMs = testMode ? options.roundMs ?? Number(process.env.ROUND_SECONDS || DEFAULT_ROUND_SECONDS) * 1000 : DEFAULT_ROUND_SECONDS * 1000;
   const matches = new MatchManager(ledger, feed, { roundMs, countdownMs: testMode ? options.countdownMs ?? Number(process.env.COUNTDOWN_SECONDS || 5) * 1000 : 5_000, recoveryMs: testMode ? options.recoveryMs ?? 20_000 : 20_000, outageMs: testMode ? options.outageMs ?? 20_000 : 20_000, dataDir: options.dataDir ?? path.resolve(ROOT, process.env.DATA_DIR || 'data') });
@@ -106,6 +125,7 @@ export async function startServer(options: ServerOptions = {}) {
         catch (error: any) { return json(response, 400, { error: String(error.shortMessage || error.message).slice(0, 200) }); }
       }
       if (url.pathname === '/api/health') return json(response, 200, { ok: true, serverTime: Date.now(), source: feed.source, feedConnected: feed.connected, marketsReady: feed.snapshot().filter(x => x.available).length, feedError: feed.clock?.error ?? feed.lastError, clock: feed.clock, feedDiagnostics: feed.diagnostics, ledger: ledger.info, roundSeconds: Math.ceil(roundMs / 1000), roundDurations: ROUND_DURATIONS, testMode });
+      if (url.pathname === '/api/invite-origin' && request.method === 'GET') return json(response, 200, { origin: lanOrigin(request, server.address()) });
       if (url.pathname === '/api/history') return json(response, 200, { matches: matches.getHistory() });
       if (url.pathname.startsWith('/api/receipt/')) {
         const hash = url.pathname.slice('/api/receipt/'.length);
@@ -138,7 +158,7 @@ export async function startServer(options: ServerOptions = {}) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: 4096 });
   server.on('upgrade', (request, socket, head) => {
     const url = new URL(request.url || '/', 'http://localhost');
-    if (url.pathname !== '/ws') { socket.destroy(); return; }
+    if (url.pathname !== '/ws' && url.pathname !== '/api/ws') { socket.destroy(); return; }
     // Only same-origin browser connections; non-browser test clients may omit Origin.
     const origin = request.headers.origin;
     if (origin) {
@@ -162,10 +182,13 @@ export async function startServer(options: ServerOptions = {}) {
   });
   const port = options.port ?? Number(process.env.PORT || 3000);
   const host = options.host ?? process.env.HOST ?? '0.0.0.0';
-  await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, host, () => { server.off('error', reject); resolve(); }); });
-  const address = server.address();
-  const actualPort = typeof address === 'object' && address ? address.port : port;
-  console.log(`Trading Duel ready at http://localhost:${actualPort} (${feed.source}, ${ledger.info.mode})`);
+  let actualPort = port;
+  if (options.listen !== false) {
+    await new Promise<void>((resolve, reject) => { server.once('error', reject); server.listen(port, host, () => { server.off('error', reject); resolve(); }); });
+    const address = server.address();
+    actualPort = typeof address === 'object' && address ? address.port : port;
+    console.log(`Trading Duel ready at http://localhost:${actualPort} (${feed.source}, ${ledger.info.mode})`);
+  }
   let closing = false;
   async function close(): Promise<void> {
     if (closing) return; closing = true;
@@ -173,7 +196,7 @@ export async function startServer(options: ServerOptions = {}) {
     for (const ws of wss.clients) ws.terminate();
     await new Promise<void>(resolve => wss.close(() => resolve()));
     await vite?.close();
-    await new Promise<void>(resolve => server.close(() => resolve()));
+    if (server.listening) await new Promise<void>(resolve => server.close(() => resolve()));
     await ledger.close();
   }
   return { server, wss, matches, feed, ledger, port: actualPort, close };

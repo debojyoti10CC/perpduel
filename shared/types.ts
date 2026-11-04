@@ -20,9 +20,9 @@ export interface Market extends Quote { candles: Candle[]; candleSets?: Partial<
 export interface Position { coin: Coin; quantity: number; entry: number; margin: number; unrealizedPnl: number }
 export interface Account { cash: number; equity: number; realizedPnl: number; unrealizedPnl: number; fees: number; reservedMargin: number; availableMargin: number; peakEquity: number; maxDrawdown: number; score: number; disabled: boolean; positions: Position[]; nonce: number }
 export interface LedgerSnapshot { accounts: [Account, Account]; winner: number | null; txHash?: string }
-export interface LedgerInfo { mode: 'local-evm' | 'monad'; chainId: number; contractAddress: string; relayerAddress: string; explorer?: string }
+export type LedgerInfo = { mode: 'paper' } | { mode: 'local-evm' | 'monad'; chainId: number; contractAddress: string; relayerAddress: string; explorer?: string };
 export interface Player extends Account { name: string; connected: boolean; ready: boolean; selected: number; margin: number; disconnectedAt?: number }
-export interface Fill { id: string; time: number; seat: number; coin: Coin; action: TradeAction; quantity: number; price: number; fee: number; txHash: string }
+export interface Fill { id: string; time: number; seat: number; coin: Coin; action: TradeAction; quantity: number; price: number; fee: number; txHash?: string }
 export type Phase = 'lobby' | 'registering' | 'countdown' | 'active' | 'settling' | 'finished' | 'void';
 export type StakeAsset = 'MON' | 'SOL' | 'ETH';
 export interface Stake { asset: StakeAsset; amount: number }

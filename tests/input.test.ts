@@ -18,23 +18,23 @@ test('one stick tilt moves once and must return to center even after reversing d
 });
 
 test('a held trade button never repeats and must release before firing again', () => {
-  let step = stepPad(initializePad(pad()), pad(0, [4]));
+  let step = stepPad(initializePad(pad()), pad(0, [6]));
   assert.deepEqual(step.actions, ['long']);
-  step = stepPad(step.memory, pad(0, [4])); assert.deepEqual(step.actions, []);
+  step = stepPad(step.memory, pad(0, [6])); assert.deepEqual(step.actions, []);
   step = stepPad(step.memory, pad()); assert.deepEqual(step.actions, []);
-  step = stepPad(step.memory, pad(0, [4])); assert.deepEqual(step.actions, ['long']);
+  step = stepPad(step.memory, pad(0, [6])); assert.deepEqual(step.actions, ['long']);
 });
 
 test('connecting while holding controls does not trade or switch markets', () => {
-  let step = stepPad(initializePad(pad(1, [4, 5, 9])), pad(1, [4, 5, 9]));
+  let step = stepPad(initializePad(pad(1, [6, 7, 9])), pad(1, [6, 7, 9]));
   assert.deepEqual(step.actions, []);
   step = stepPad(step.memory, pad());
-  step = stepPad(step.memory, pad(1, [4]));
+  step = stepPad(step.memory, pad(1, [6]));
   assert.deepEqual(step.actions, ['next', 'long']);
 });
 
-test('standard button map uses LB long, RB short, B half, Y close, A/X margin, Start ready', () => {
-  for (const [button, action] of [[4, 'long'], [5, 'short'], [1, 'half'], [3, 'close'], [0, 'marginDown'], [2, 'marginUp'], [9, 'ready']] as const) {
+test('standard button map uses LT long, RT short, B half, Y close, A/X margin, Start ready', () => {
+  for (const [button, action] of [[6, 'long'], [7, 'short'], [1, 'half'], [3, 'close'], [0, 'marginDown'], [2, 'marginUp'], [9, 'ready']] as const) {
     assert.deepEqual(stepPad(initializePad(pad()), pad(0, [button])).actions, [action]);
   }
 });
@@ -48,8 +48,8 @@ test('D-pad uses the same navigation latch and cannot repeat until released', ()
   step = stepPad(step.memory, pad(0, [15])); assert.deepEqual(step.actions, ['next']);
 });
 
-test('opposing navigation, face buttons, and shoulders do not emit conflicting actions', () => {
-  assert.deepEqual(stepPad(initializePad(pad()), pad(0, [14, 15, 0, 2, 4, 5])).actions, []);
+test('opposing navigation, face buttons, and triggers do not emit conflicting actions', () => {
+  assert.deepEqual(stepPad(initializePad(pad()), pad(0, [14, 15, 0, 2, 6, 7])).actions, []);
 });
 
 test('stick drift inside the threshold does not switch markets', () => {
@@ -184,7 +184,7 @@ test('menu controls map A to confirm and B to back while ignoring trade-only con
     const frame = stepPad(initializePad(pad(), true), pad(0, [button]), true);
     assert.deepEqual(frame.actions.map(menuActionForInput).filter(Boolean), [expected]);
   }
-  for (const button of [2, 3, 4, 5, 9]) {
+  for (const button of [2, 3, 4, 5, 6, 7, 9]) {
     const frame = stepPad(initializePad(pad(), true), pad(0, [button]), true);
     assert.deepEqual(frame.actions.map(menuActionForInput).filter(Boolean), []);
   }

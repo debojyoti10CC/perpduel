@@ -1,9 +1,11 @@
 export default function ControllerArt({ active = [], axis = 0, verticalAxis = 0, rightAxis = 0 }: { active?: number[]; axis?: number; verticalAxis?: number; rightAxis?: number }) {
   const color = (button: number, base: string) => active[button] > 0.5 ? base : '#252c38';
   return <svg className="controller-art" viewBox="0 0 300 195" fill="none" aria-label="Controller input visualization">
-    <defs><linearGradient id="padbody" x1="150" y1="30" x2="150" y2="185" gradientUnits="userSpaceOnUse"><stop stopColor="#262c37"/><stop offset="1" stopColor="#141920"/></linearGradient></defs>
-    <path d="M71 43c17-11 40-8 54 0h50c14-8 37-11 54 0 23 16 47 88 40 116-6 29-24 29-43 7l-29-29h-94l-29 29c-19 22-37 22-43-7C24 131 48 59 71 43Z" fill="url(#padbody)" stroke="#414a5a" strokeWidth="1.5"/>
-    <path d="M63 42c15-16 32-17 49-9M188 33c17-8 34-7 49 9" stroke="#566078" strokeWidth="5" strokeLinecap="round"/>
+    <path d="M71 43c17-11 40-8 54 0h50c14-8 37-11 54 0 23 16 47 88 40 116-6 29-24 29-43 7l-29-29h-94l-29 29c-19 22-37 22-43-7C24 131 48 59 71 43Z" fill="#292237" stroke="#827092" strokeWidth="2"/>
+    <path d="M63 42c15-16 32-17 49-9" stroke={active[6] > 0.5 ? '#55d6a7' : '#566078'} strokeWidth="7" strokeLinecap="round"/>
+    <path d="M188 33c17-8 34-7 49 9" stroke={active[7] > 0.5 ? '#ff91ad' : '#566078'} strokeWidth="7" strokeLinecap="round"/>
+    <text x="87" y="22" fill="#a9e9d3" fontSize="15" fontWeight="700" textAnchor="middle">LT</text>
+    <text x="213" y="22" fill="#ffbacb" fontSize="15" fontWeight="700" textAnchor="middle">RT</text>
     <circle cx="92" cy="79" r="24" fill="#0e1218" stroke="#414a5a"/>
     <circle cx={92 + axis * 8} cy={79 + verticalAxis * 8} r="16" fill="#303b4f" stroke="#667b9d"/>
     <circle cx="185" cy="121" r="22" fill="#10141a" stroke="#343e4e"/><circle cx="185" cy={121 + rightAxis * 8} r="14" fill="#2e3746"/>

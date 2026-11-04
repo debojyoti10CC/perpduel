@@ -79,6 +79,30 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena .clock-phase{color:#b697c9}
 .dark-arena .clock-card.urgent{background:#321524;border-color:#9f4767}
 .dark-arena .clock-card.urgent .clock-number{color:#ffc0d8}
+.dark-arena.final-seconds::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, #e3142612 22%, #ca132a44 70%, #b80625a6 100%);
+  box-shadow: inset 0 0 70px #e3183a80;
+  opacity: .88;
+  animation: final-seconds-glow 1.35s ease-in-out infinite alternate;
+}
+.dark-arena.final-seconds .clock-card.urgent {
+  background: #440e18;
+  border-color: #f45567;
+  box-shadow: 0 0 26px #e7264a70;
+}
+.dark-arena.final-seconds :is(.clock-number, .clock-phase) { color: #ffccd2; }
+@keyframes final-seconds-glow {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dark-arena.final-seconds::after { animation: none; }
+}
 .dark-arena .clock-track{background:#37223e}
 .dark-arena .clock-track i{background:#c496e5}
 .dark-arena .lobby-banner{background:#21172c;border-color:#4d315f;color:#b29ac2}
@@ -127,29 +151,33 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena .feed-warning{background:#2b2034;border-color:#533761;color:#b398c2}
 .dark-arena .feed-warning svg{color:#c4a1dc}
 .dark-arena .fixture-ribbon{background:#4c321a;color:#f4cb85;border-color:#8f6234}
-.dark-arena .trade-dock,.dark-arena .trade-dock.player-0,.dark-arena .trade-dock.player-1{background:#17111ff7;border:1px solid #402b50;box-shadow:0 4px 14px #0002}
-.dark-arena .trade-dock.player-0.active-dock{border-color:#4d648c}
-.dark-arena .trade-dock.player-1.active-dock{border-color:#80519c}
+.dark-arena .trade-dock.player-0,.dark-arena .trade-dock.player-1{background:#0b0b0d;border:1px solid #303035;box-shadow:none}
+.dark-arena .trade-dock.player-0.active-dock{border-color:#6d8ec0}
+.dark-arena .trade-dock.player-1.active-dock{border-color:#ad77d1}
 .dark-arena .seat-marker.p1{background:#243d62;color:#b7d1fa;border-color:#3b5b87}
 .dark-arena .seat-marker.p2{background:#4a2b5c;color:#e7b8ff;border-color:#7e4c97}
 .dark-arena .dock-symbol strong{color:#e4c9f2}
-.dark-arena .dock-symbol strong>span,.dark-arena .margin-control>span{color:#9a7eac}
-.dark-arena .dock-symbol button,.dark-arena .margin-control button{background:#281c33;border-color:#4b315c;color:#b99bcc}
-.dark-arena .margin-control>strong{color:#debeed}
+.dark-arena .dock-symbol strong>span,.dark-arena .margin-control>span{color:#aaa8b3}
+.dark-arena .dock-symbol button,.dark-arena .margin-control button{background:#19191e;border-color:#33333a;color:#d1cfd9;border-radius:6px}
+.dark-arena .margin-control>strong{color:#f0eef5}
 .dark-arena .leverage-badge{background:#3a244b;color:#c4a0d9;border-color:#58366c}
-.dark-arena .trade-button.long{background:linear-gradient(#244e3d,#1b3a2e);border-color:#3a7b59;color:#b2edce;box-shadow:inset 0 1px 0 #caffdf0c}
-.dark-arena .trade-button.short{background:linear-gradient(#572a3d,#3d1d2d);border-color:#87465d;color:#ffc1d5;box-shadow:inset 0 1px 0 #ffd4e30c}
-.dark-arena .trade-button.close-half,.dark-arena .trade-button.close-all{background:#2c1e38;border-color:#583d69;color:#c9a9dd}
-.dark-arena .trade-button:not(:disabled):hover{filter:brightness(1.22);transform:translateY(-1px)}
-.dark-arena .trade-button:disabled{opacity:.35;filter:saturate(.6)}
-.dark-arena .pad-key{border-color:#ffffff25;background:#0002;color:inherit}
+.dark-arena .trade-button{border-radius:8px;font-weight:700;box-shadow:none}
+.dark-arena .trade-button.long{background:#08724f;border-color:#329474;color:#f3fff9}
+.dark-arena .trade-button.short{background:#992f54;border-color:#bb5575;color:#fff4f7}
+.dark-arena .trade-button.close-half,.dark-arena .trade-button.close-all{background:#5c397d;border-color:#795697;color:#fcf4ff}
+.dark-arena .trade-button:not(:disabled):hover{filter:brightness(1.15);transform:translateY(-1px)}
+.dark-arena .trade-button:disabled{opacity:1;filter:none;cursor:not-allowed}
+.dark-arena .trade-button.long:disabled{background:#174e3c;border-color:#386b58;color:#b8dbcc}
+.dark-arena .trade-button.short:disabled{background:#61233d;border-color:#88445d;color:#e9c0cf}
+.dark-arena .trade-button.close-half:disabled,.dark-arena .trade-button.close-all:disabled{background:#39264d;border-color:#594266;color:#cebddc}
+.dark-arena .pad-key{border:0;background:#101014;color:#f3f1f6;font-weight:750}
 .dark-arena .dock-bottom>span{color:#9c82ad}
 .dark-arena .button,.dark-arena .button-small{background:#2a1c35;color:#d8b8e8;border:1px solid #5d3d70;box-shadow:inset 0 1px 0 #e9c6ff0a}
 .dark-arena .button:hover{background:#3b264a;color:#f0d5ff;border-color:#9163a9}
-.dark-arena .button-primary,.dark-arena .ready-button{border:1px solid #edd5ff;border-bottom-color:#9c6fc4;background:linear-gradient(180deg,#f5e0ff,#d8b3f4 54%,#bd8de1);color:#331346;font-weight:650;box-shadow:inset 0 1px 0 #fffb,0 3px 0 #603977,0 5px 13px #a56bce16}
-.dark-arena .button-primary:hover,.dark-arena .ready-button:hover{background:linear-gradient(180deg,#fff2ff,#e9cafc 54%,#cea3ef);border-color:#f7e8ff;color:#2c0e3c;box-shadow:inset 0 1px 0 #fffc,0 4px 0 #72448c,0 6px 18px #d59aff22;transform:translateY(-1px)}
-.dark-arena .button-primary:active,.dark-arena .ready-button:active{transform:translateY(2px);box-shadow:inset 0 1px 3px #4e1b6833}
-.dark-arena .ready-button.is-ready{background:linear-gradient(#315d47,#254632);border-color:#538764;color:#b7ecc7;box-shadow:0 2px 0 #183025}
+.dark-arena .button-primary{border:1px solid #edd5ff;border-bottom-color:#9c6fc4;background:linear-gradient(180deg,#f5e0ff,#d8b3f4 54%,#bd8de1);color:#331346;font-weight:650;box-shadow:inset 0 1px 0 #fffb,0 3px 0 #603977,0 5px 13px #a56bce16}
+.dark-arena .button-primary:hover{background:linear-gradient(180deg,#fff2ff,#e9cafc 54%,#cea3ef);border-color:#f7e8ff;color:#2c0e3c;box-shadow:inset 0 1px 0 #fffc,0 4px 0 #72448c,0 6px 18px #d59aff22;transform:translateY(-1px)}
+.dark-arena .button-primary:active{transform:translateY(2px);box-shadow:inset 0 1px 3px #4e1b6833}
+.dark-arena .ready-button.is-ready,.dark-arena .ready-button.is-ready:disabled{background:#18523c;border-color:#4a8069;color:#dbf9e9;box-shadow:none;opacity:1}
 .dark-arena .button:disabled{opacity:.4;filter:saturate(.35);cursor:not-allowed}
 .dark-arena .arena-utility-bar{color:#92739f}
 .dark-arena .arena-utility-bar button{background:#25192f;border:1px solid #442c52;color:#b795ca}
@@ -195,7 +223,6 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena .result-trophy{background:#3e254d;color:#deb1f6;box-shadow:0 0 35px #c679ee14}
 .arena-result-stake{border:1px solid #7d4c96;background:linear-gradient(125deg,#3c214b,#24152f);padding:17px 20px;border-radius:14px;margin:20px 0;display:flex;align-items:center;gap:15px;flex-wrap:wrap}
 .arena-result-stake>span{font-size:9px;color:#b78bca;letter-spacing:1px}.arena-result-stake>strong{margin-left:auto;font-size:22px;letter-spacing:-.5px;color:#edccff}.arena-result-stake>p{width:100%;font-size:12px;margin:0;color:#c39bd6}
-.arena-claim{background:#25142f;border:1px solid #644078;padding:17px 20px;border-radius:14px;margin:16px 0}.arena-claim>div{display:flex;align-items:center;gap:8px;color:#d5a3ed}.arena-claim>div>strong{font-size:13px;font-weight:550;color:#e5c1f5}.arena-claim>div>span{font-size:7px;letter-spacing:.5px;margin-left:auto;color:#b183c4;background:#3b2249;border-radius:4px;padding:4px 6px}.arena-claim>p{color:#ad82be;font-size:11px;line-height:1.75;margin:10px 0 15px}.arena-claim>button{min-height:38px;padding:9px 14px}.arena-claim .arena-claim-status{color:#a1d4ba;margin-bottom:0}.arena-claim .arena-claim-error{color:#efa6c2;background:#442134;border-radius:8px;padding:10px 12px;margin-bottom:0}.arena-claim-receipt{display:inline-flex;align-items:center;gap:6px;font-size:10px;margin-top:13px;color:#c997e3}.arena-claim-receipt:hover{color:#efd5ff}
 .dark-arena .positions-header,.dark-arena th,.dark-arena td{border-color:#452b53}
 .dark-arena th,.dark-arena .positions-header>span{background:#21142b;color:#a97ebc}
 .dark-arena td{color:#dbb9ea}
@@ -240,12 +267,11 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .dark-arena .market-card.selected-p2{border-color:#e2a9f1;background:#1a1a1a;box-shadow:inset -3px 0 #e2a9f1}
 .dark-arena .market-card.selected-p1.selected-p2{border-color:#8b71a0;box-shadow:inset 3px 0 #34d399,inset -3px 0 #e2a9f1}
 .dark-arena .market-card.selected-p1 .market-card-header,.dark-arena .market-card.selected-p2 .market-card-header{background:none}
-.dark-arena .trade-button.long{background:#126344;border-color:#168455;color:#d1fae5;box-shadow:none}
-.dark-arena .trade-button.short{background:#512333;border-color:#713248;color:#ffe4ec;box-shadow:none}
-.dark-arena .ready-button{background:#e2a9f1;color:#211727;box-shadow:none}
-.dark-arena .ready-button:hover{background:#efc7f7}
+.dark-arena .ready-button{background:#dc94f0;border:1px solid #edb6fa;border-radius:7px;color:#24152c;box-shadow:none;font-weight:750}
+.dark-arena .ready-button:not(:disabled):not(.is-ready):hover{background:#e8acf7}
 .dark-arena .market-card-footer{border-color:#303030}
 .dark-arena .positive{color:#34d399}
+.dark-arena .dock-bottom > .order-margin-warning { color: #ffb7a5; }
 .dark-arena .player-avatar.identicon{background:transparent;border:0;padding:0;overflow:hidden;border-radius:50%;box-shadow:none}
 @media(min-width:1100px){.dark-arena .market-chart{min-height:132px}.dark-arena .market-card-footer{font-size:10px}.dark-arena .market-price-row>strong{font-size:27px}}
 
@@ -310,7 +336,7 @@ body{font-family:'Inter Variable',Inter,Arial,sans-serif;-webkit-font-smoothing:
 .arena-result-dialog .arena-result-stake,
 .arena-result-dialog .arena-claim { margin: 12px 0 0; padding: 12px; border-color: #39393e; background: #232326; }
 .arena-result-dialog .result-note { margin-top: 10px; color: #b4b4bc; }
-.dark-arena .arena-result-dialog .modal-actions { margin-top: 12px; padding-top: 12px; border-color: #38383e; }
+.dark-arena .arena-result-dialog .modal-actions { flex-wrap: wrap; margin-top: 12px; padding-top: 12px; border-color: #38383e; }
 .dark-arena .arena-result-dialog .button { min-height: 36px; background: #29292d; border-color: #414147; color: #f4f4f5; box-shadow: none; }
 .dark-arena .arena-result-dialog .button:hover:not(:disabled) { background: #38383e; }
 .dark-arena .arena-result-dialog .button-primary { background: #e2a9f1; border-color: #e2a9f1; color: #211727; }

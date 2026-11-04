@@ -21,7 +21,8 @@ export function useDuel(onFeedback: (event: Feedback) => void, onError: (message
     let alive = true, timer: ReturnType<typeof setTimeout>, attempts = 0;
     const connect = () => {
       const origin = configuredOrigin ?? location.origin;
-      const url = `${origin.replace(/^http/, 'ws').replace(/\/$/, '')}/ws`;
+      const path = new URL(origin, location.origin).origin === location.origin ? '/api/ws' : '/ws';
+      const url = `${origin.replace(/^http/, 'ws').replace(/\/$/, '')}${path}`;
       const ws = new WebSocket(url); socket.current = ws;
       ws.onopen = () => {
         if (!alive) { ws.close(); return; }

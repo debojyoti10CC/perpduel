@@ -3,7 +3,9 @@ import FaultyTerminal from './components/FaultyTerminal.jsx';
 import AssetPicker from './components/AssetPicker.jsx';
 import Identicon from './components/Identicon.jsx';
 import RoundDurationPicker from './components/RoundDurationPicker.jsx';
+import EscrowClaim from './game/components/EscrowClaim.tsx';
 import useTokenUsd from './hooks/useTokenUsd.js';
+import { copyInviteText, roomInvite } from './game/invite.ts';
 import { DEFAULT_ROUND_SECONDS, isRoundDuration } from '../shared/types.ts';
 
 const ASSETS = ['MON', 'SOL', 'ETH'];
@@ -114,6 +116,8 @@ export default function App({ initialSession }) {
   const [walletBalance, setWalletBalance] = useState(null);
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedProfile, setSelectedProfile] = useState(null);
+  const [settledDuel, setSettledDuel] = useState(null);
+  const settledId = new URLSearchParams(location.search).get('settled');
   const amountRef = useRef(null);
   const lastRoom = useRef(null);
   const pending = useRef(null);
@@ -130,7 +134,18 @@ export default function App({ initialSession }) {
     return data;
   }, []);
   const notify = useCallback(message => setToast(message), []);
-  const onError = useCallback(message => { setBusy(''); setError(message); }, []);
+  const onError = useCallback(message => {
+    setBusy('');
+    if (pending.current === 'join' && message.includes('Sign in with your Monad testnet wallet before joining.')) {
+      pending.current = null;
+      pendingModal.current = 'matchup';
+      setModal('wallet');
+      setError('');
+      return;
+    }
+    pending.current = null;
+    setError(message);
+  }, []);
   const feedback = useCallback(event => { if (event.kind === 'reject') setError(event.message); }, []);
   const duel = useDuel(feedback, onError);
   const { state, seats, connected, send } = duel;
@@ -139,6 +154,15 @@ export default function App({ initialSession }) {
   const closeModal = () => { if (!busy) { setModal(null); setError(''); } };
   const openModal = next => { setError(''); setModal(next); };
   const invoke = async (label, action) => { setError(''); setBusy(label); try { await action(); } catch (cause) { setError(cause.shortMessage || cause.message || 'Please try again.'); } finally { setBusy(''); } };
+  const openSettlement = () => {
+    setSettledDuel(null);
+    openModal('settlement');
+    void invoke('settlement', async () => {
+      const match = await request(`/api/matches/${encodeURIComponent(settledId)}`);
+      if (!match.funding || !['finished', 'void'].includes(match.phase)) throw new Error('No settled testnet duel found.');
+      setSettledDuel(match);
+    });
+  };
 
   useEffect(() => { if (!toast) return; const timer = setTimeout(() => setToast(''), 5000); return () => clearTimeout(timer); }, [toast]);
   useEffect(() => { localStorage.setItem('perpduel-name', name); }, [name]);
@@ -200,9 +224,9 @@ export default function App({ initialSession }) {
     event?.preventDefault();
     const code = roomCode.trim().toUpperCase();
     if (!/^[A-Z0-9]{6}$/.test(code)) { setError('Enter the six-character room code.'); return; }
-    if (!walletAddress) { pendingModal.current = 'matchup'; openModal('wallet'); return; }
+    if (selectedRoom?.funding && !walletAddress) { pendingModal.current = 'matchup'; openModal('wallet'); return; }
     setBusy('Joining the room…'); setError(''); pending.current = 'join';
-    if (!send({ type: 'join', code, name: name.trim() || shortAddress(walletAddress) })) setBusy('');
+    if (!send({ type: 'join', code, name: name.trim() || shortAddress(walletAddress) || 'Challenger' })) setBusy('');
   };
   const chooseRoom = room => { if (state?.code === room.code) { openModal('waiting'); return; } setSelectedRoom(room); setSelectedProfile(null); setRoomCode(room.code); openModal('matchup'); };
   const chooseProfile = profile => { setSelectedRoom(null); setSelectedProfile(profile); setRoomCode(''); openModal('matchup'); };
@@ -242,7 +266,10 @@ export default function App({ initialSession }) {
     setModal(null); lastRoom.current = null;
   });
   const practice = () => { window.open(`/?practice=1&roundSeconds=${practiceRoundSeconds}`, '_blank', 'noopener,noreferrer'); };
-  const copy = async text => { try { await navigator.clipboard.writeText(text); notify('Copied to clipboard.'); } catch { setError('Clipboard unavailable. Select and copy the room code.'); } };
+  const copy = async text => {
+    if (await copyInviteText(text)) notify('Copied to clipboard.');
+    else setError(text);
+  };
   const handleTabKey = event => { if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return; event.preventDefault(); const next = event.key === 'Home' ? 'open' : event.key === 'End' ? 'mine' : tab === 'open' ? 'mine' : 'open'; setTab(next); document.getElementById(`${next}-tab`)?.focus(); };
   const ownRoom = state ? { id: state.id, code: state.code, host: state.players[0].name, mode: state.mode, phase: state.phase, players: state.players.filter(p => p.connected).length, stake: state.stake, funding: state.funding, current: true, live: true, address: state.players[0].name, asset: state.stake?.asset || 'MON', amount: state.stake?.amount || 0, duration: formatRound(state.roundSeconds), avatarSeed: state.funding?.hostAddress || walletAddress || state.players[0].name } : null;
   const publicRows = rooms.map(room => ({ ...room, live: true, address: room.host, asset: room.stake?.asset || 'MON', amount: room.stake?.amount || 0, duration: formatRound(room.roundSeconds), avatarSeed: room.funding?.hostAddress || room.host }));
@@ -251,13 +278,25 @@ export default function App({ initialSession }) {
   const funding = state?.funding;
   const myFunded = seats.includes(0) ? funding?.hostFunded : funding?.guestFunded;
   const bothFunded = funding?.hostFunded && funding?.guestFunded;
-  const canEnter = state && (state.mode === 'local' || bothFunded || ['finished', 'void'].includes(state.phase));
+  const canEnter = state && (!funding || bothFunded || ['finished', 'void'].includes(state.phase));
 
   return <>
     <div className="terminal-background" aria-hidden="true"><FaultyTerminal tint="#7c3aed" glyphs="blocks" scale={2.9} digitSize={1.2} timeScale={0.5} brightness={0.6} glow={0} persistence={0} mouseStrength={0.5} mouseGlow={0} curvature={0} vignette={0} clickEffect="none" dpr={1} /></div>
     <div className="page-gradient" />
     <header className="site-header"><a className="brand" href="/"><BrandMark /><span>PERPDUEL</span></a><nav aria-label="Main navigation"><button className="text-button how-it-works" onClick={() => openModal('rules')}>How it works <Icon name="external" size={13} /></button><button className={`wallet-button ${walletAddress ? 'connected' : ''}`} onClick={() => openModal(walletAddress ? 'account' : 'wallet')}>{walletAddress && <span className="connection-dot" />}{walletAddress ? shortAddress(walletAddress) : 'Connect wallet'}</button></nav></header>
     <main>
+      {settledId && <div className="content-width lobby-settlement"><button className="join-room-button" onClick={openSettlement}>Settle your last testnet duel <Icon name="arrow" size={15} /></button></div>}
+      {modal === 'settlement' && <Modal title="Testnet duel settlement" onClose={closeModal}>
+        {busy && <p role="status">Loading match result…</p>}
+        {error && <p className="info-note" role="alert">{error}</p>}
+        {settledDuel && <EscrowClaim
+          code={settledDuel.code}
+          contractAddress={settledDuel.funding.contractAddress}
+          roomId={settledDuel.funding.escrowRoomId || settledDuel.funding.roomId}
+          voided={settledDuel.phase === 'void' || settledDuel.winner === null}
+          buttonClassName="black-button"
+        />}
+      </Modal>}
       <section className="hero" aria-labelledby="deposit-title"><h1 id="deposit-title">Deposit</h1><form className={`deposit-form ${error && !modal ? 'has-error' : ''}`} onSubmit={beginCreate}>
         <input ref={amountRef} aria-label="Deposit amount" aria-describedby="deposit-help" inputMode="decimal" placeholder="Enter stake" value={amount} onChange={e => { if (/^\d*\.?\d{0,6}$/.test(e.target.value)) { setAmount(e.target.value); setError(''); } }} />
         <output className="deposit-usd" aria-label="Estimated dollar reference" title="Mainnet token reference price only. Testnet MON has no monetary value.">{usdValue}</output><AssetSelect asset={asset} onChange={setAsset} /><button className="deposit-submit" type="submit" aria-label="Create a staked room"><Icon name="arrow" size={27} /></button>
@@ -287,16 +326,16 @@ export default function App({ initialSession }) {
         <RoundDurationPicker value={practiceRoundSeconds} onChange={setPracticeRoundSeconds} label="Practice round length" />
         <button type="button" className="matchup-practice-button" onClick={() => { setModal(null); practice(); }}>Play bot</button>
       </div>
-      <button className="matchup-join-button" disabled={!connected || !!busy} type="submit">{busy || (walletAddress ? 'Join duel' : 'Connect wallet to join')}</button>
+      <button className="matchup-join-button" disabled={!connected || !!busy} type="submit">{busy || (selectedRoom?.funding && !walletAddress ? 'Connect wallet to join' : 'Join duel')}</button>
     </div>
     <p className="modal-footnote">A live duel requires a room code and matching test MON deposit. Testnet MON has no cash value.</p></form></Modal>}
 
     {modal === 'setup' && <Modal title="Monad testnet escrow" onClose={closeModal}><p className="modal-copy">{config?.enabled ? 'The room escrow contract is ready.' : config?.configured ? (config.reason || 'The registered escrow contract could not be verified.') : 'Deploy the room escrow once from your wallet. Both players then deposit directly into this contract.'}</p><dl className="summary"><div><dt>Network</dt><dd>Monad testnet · 10143</dd></div><div><dt>Contract</dt><dd>{config?.contractAddress ? shortAddress(config.contractAddress) : 'Not deployed yet'}</dd></div><div><dt>Settlement</dt><dd>Server-signed match result</dd></div></dl><p className="info-note">Only test MON is used. The contract holds equal stakes, credits the winner, refunds a draw, and provides an expiry refund if the match server becomes unavailable.</p>{error && <p className="form-error" role="alert">{error}</p>}<button className="black-button full-width" disabled={!!busy || !config || config.configured && !config.enabled} onClick={config?.enabled ? closeModal : setupEscrow}>{busy || (config?.enabled ? 'Done' : config?.configured ? 'Escrow unavailable' : 'Deploy with my wallet')}<Icon name="arrow" size={17} /></button><p className="modal-footnote">Deployment spends testnet gas. Your wallet will show the transaction before you approve it.</p></Modal>}
 
-    {modal === 'waiting' && state && <Modal title="Your duel room" onClose={closeModal} className="waiting-modal"><div className="room-meta-line"><span className="room-network"><span className="live-dot" />{state.mode === 'local' ? 'PRACTICE' : 'MONAD TESTNET'}</span><span>{formatRound(state.roundSeconds)} · {state.stake ? `${formatAmount(state.stake.amount * 2)} MON pool` : 'No stake'}</span></div><div className="matchmaking-layout">
-      {[0, 1].map(seat => <div className={`matchmaking-player ${seat === 1 ? 'opponent-card' : 'host-card'}`} key={seat}><span className="seat-eyebrow">PLAYER {seat + 1}</span>{state.players[seat].connected ? <Avatar seed={seat === 0 ? funding?.hostAddress || walletAddress || state.players[seat].name : funding?.guestAddress || state.players[seat].name} /> : <span className="waiting-avatar">?</span>}<strong>{seats.includes(seat) ? 'You' : state.players[seat].connected ? state.players[seat].name : 'Finding your rival'}</strong><span className="waiting-name">{seats.includes(seat) ? state.players[seat].name : state.players[seat].connected ? 'Connected' : 'Share your room ID to invite'}</span><span className={`funding-badge ${(seat === 0 ? funding?.hostFunded : funding?.guestFunded) ? 'funded' : ''}`}>{(seat === 0 ? funding?.hostFunded : funding?.guestFunded) ? '✓ Stake confirmed' : state.players[seat].connected ? 'Awaiting deposit' : 'Waiting for player'}</span></div>)}
+    {modal === 'waiting' && state && <Modal title="Your duel room" onClose={closeModal} className="waiting-modal"><div className="room-meta-line"><span className="room-network"><span className="live-dot" />{state.mode === 'local' ? 'PRACTICE' : funding ? 'MONAD TESTNET' : 'PAPER DUEL'}</span><span>{formatRound(state.roundSeconds)} · {state.stake ? `${formatAmount(state.stake.amount * 2)} MON pool` : 'No stake'}</span></div><div className="matchmaking-layout">
+      {[0, 1].map(seat => <div className={`matchmaking-player ${seat === 1 ? 'opponent-card' : 'host-card'}`} key={seat}><span className="seat-eyebrow">PLAYER {seat + 1}</span>{state.players[seat].connected ? <Avatar seed={seat === 0 ? funding?.hostAddress || walletAddress || state.players[seat].name : funding?.guestAddress || state.players[seat].name} /> : <span className="waiting-avatar">?</span>}<strong>{seats.includes(seat) ? 'You' : state.players[seat].connected ? state.players[seat].name : 'Finding your rival'}</strong><span className="waiting-name">{seats.includes(seat) ? state.players[seat].name : state.players[seat].connected ? 'Connected' : 'Share your room ID to invite'}</span><span className={`funding-badge ${(seat === 0 ? funding?.hostFunded : funding?.guestFunded) ? 'funded' : ''}`}>{(seat === 0 ? funding?.hostFunded : funding?.guestFunded) ? '✓ Stake confirmed' : state.players[seat].connected ? (funding ? 'Awaiting deposit' : 'Connected') : 'Waiting for player'}</span></div>)}
       <div className="room-code-center"><span>VS</span><button className="room-code-copy" onClick={() => copy(state.code)} aria-label={`Copy room code ${state.code}`}>{state.code}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><rect x="8" y="8" width="12" height="12" rx="2" /><path d="M16 8V4H4v12h4" /></svg></button><small>ROOM ID</small></div>
-    </div><div className="waiting-actions"><button className="join-room-button" onClick={() => copy(`${location.origin}/?room=${state.code}`)}>Copy invite link<Icon name="external" size={13} /></button><button className="practice-link" onClick={practice}>Play a practice bot<Icon name="arrow" size={14} /></button></div><div className="room-status-note" role="status">{bothFunded ? 'Both stakes confirmed. Enter the arena and ready up.' : myFunded ? 'Your stake is secured. Waiting for the other player’s deposit.' : 'Approve your room stake to secure your seat.'}</div>{error && <p className="form-error" role="alert">{error}</p>}
+    </div><div className="waiting-actions"><button className="join-room-button" onClick={async () => copy(await roomInvite(state.code, Boolean(funding)))}>Copy invite link<Icon name="external" size={13} /></button><button className="practice-link" onClick={practice}>Play a practice bot<Icon name="arrow" size={14} /></button></div><div className="room-status-note" role="status">{!funding ? 'Enter the arena and ready up.' : bothFunded ? 'Both stakes confirmed. Enter the arena and ready up.' : myFunded ? 'Your stake is secured. Waiting for the other player’s deposit.' : 'Approve your room stake to secure your seat.'}</div>{error && <p className="form-error" role="alert">{error}</p>}
     <div className="room-primary-actions">{!myFunded && state.stake && !['void', 'finished'].includes(state.phase) && <button className="black-button" disabled={!!busy || (!seats.includes(0) && !funding?.hostFunded)} onClick={fundRoom}>{busy || `Deposit ${formatAmount(state.stake.amount)} test MON`}<Icon name="wallet" size={16} /></button>}{canEnter && <a className="black-button" href={`/arena?room=${state.code}`}>Enter arena<Icon name="arrow" size={17} /></a>}{myFunded && !bothFunded && <button className="refresh-funding" disabled={!!busy} onClick={refreshFunding}>Check deposits</button>}</div><button className="cancel-room-button" disabled={!!busy || !!bothFunded} onClick={leaveRoom}>{funding?.hostFunded && seats.includes(0) ? 'Cancel room & refund stake' : 'Leave room'}</button><p className="modal-footnote">Test MON has no cash value. Practice bots never play for staked funds.</p></Modal>}
 
     {modal === 'rules' && <Modal title="Trading, head to head." onClose={closeModal}><ol className="rules-list"><li><span>01</span><div><h3>Create or join a room</h3><p>Use a public room or share the six-character room ID with a friend.</p></div></li><li><span>02</span><div><h3>Lock equal stakes</h3><p>Each player deposits the same test MON amount into the Monad testnet escrow. Both players ready up.</p></div></li><li><span>03</span><div><h3>Trade for one to five minutes</h3><p>Each starts with $1,000 paper funds. Trade six live crypto markets at 3× leverage using your keyboard, controller, or on-screen controls.</p></div></li><li><span>04</span><div><h3>Claim the pool</h3><p>The server settles the trading result. The winner submits a signed result to claim the pool; draws and void rounds refund both stakes.</p></div></li></ol><p className="info-note">The trading score is equity minus $1,000 minus 35% of maximum drawdown. Market data comes from Hyperliquid. The escrow trusts this server’s signed result; this is a testnet build.</p><button className="black-button full-width" onClick={closeModal}>Got it<Icon name="check" size={17} /></button></Modal>}
