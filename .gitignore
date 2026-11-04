@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.openai/*.local.*
+*.log
+
+.env
+data/
+artifacts/
+

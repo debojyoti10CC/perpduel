@@ -1,0 +1,138 @@
+.currency-picker {
+  position: relative;
+  flex-shrink: 0;
+  color: #f4f4f5;
+  text-align: left;
+}
+
+.currency-picker-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  min-width: 116px;
+  padding: 0 12px;
+  border: 1px solid #3b3b3d;
+  border-radius: 14px;
+  background: #262626;
+  color: #f4f4f5;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.currency-picker-trigger:hover,
+.currency-picker-trigger[aria-expanded="true"] {
+  background: #303030;
+  border-color: #515154;
+}
+
+.currency-picker-chevron {
+  margin-left: 1px;
+  color: #aaa9ad;
+  transition: transform .15s ease;
+}
+
+.currency-picker-trigger[aria-expanded="true"] .currency-picker-chevron {
+  transform: rotate(180deg);
+}
+
+.currency-picker-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 1000;
+  width: 240px;
+  max-width: calc(100vw - 32px);
+  max-height: 280px;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #3b3b3d;
+  border-radius: 14px;
+  background: #202020;
+  color: #f4f4f5;
+  box-shadow: 0 12px 36px #0005, 0 2px 8px #0003;
+}
+
+.currency-picker-option {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 61px;
+  padding: 10px 11px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: #f4f4f5;
+  text-align: left;
+}
+
+.currency-picker-option:hover,
+.currency-picker-option.is-active,
+.currency-picker-option:focus-visible {
+  background: #303030;
+  outline: none;
+}
+
+.currency-picker-trigger:focus-visible {
+  outline: 2px solid #a78bfa;
+  outline-offset: 3px;
+}
+
+.currency-picker-option:active {
+  transform: none;
+}
+
+.currency-picker-asset {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.currency-picker-name {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.currency-picker-symbol {
+  color: #aaa9ad;
+  font-size: 11px;
+  font-weight: 450;
+  line-height: 1.1;
+}
+
+.currency-picker-check {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: #a78bfa;
+}
+
+.round-duration-picker .currency-picker-trigger { min-width: 104px; }
+.round-duration-picker .currency-picker-menu { width: 160px; }
+.round-duration-picker .currency-picker-option { min-height: 38px; padding: 8px 9px; }
+.round-duration-picker .currency-picker-option > svg:first-child,
+.round-duration-picker .currency-picker-trigger > svg:first-child { color: #bfa8ef; }
+
+@media (max-width: 640px) {
+  .currency-picker-trigger {
+    height: 39px;
+    min-width: 103px;
+    gap: 6px;
+    padding: 0 9px;
+    border-radius: 12px;
+    font-size: 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .currency-picker-chevron {
+    transition: none;
+  }
+}

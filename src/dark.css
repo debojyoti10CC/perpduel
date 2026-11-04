@@ -1,0 +1,71 @@
+:root{color-scheme:dark;color:#f0eef5;background:#09090c;--ink:#f0eef5;--muted:#85818f;--line:rgba(212,204,235,.12);--green:#55d4a6}
+::selection{background:#584080;color:#fff}
+.terminal-background{opacity:.7;mask-image:linear-gradient(to bottom,#000 0%,rgba(0,0,0,.85) 55%,rgba(0,0,0,.2) 100%)}
+.page-gradient{height:100%;background:linear-gradient(180deg,rgba(9,9,12,.22),rgba(9,9,12,.1) 40%,rgba(9,9,12,.8));z-index:-1}
+.brand{color:#f2f0f7}.text-button{color:#8b8597}.text-button:hover{color:#f0edf8}
+.wallet-button,.create-button,.black-button{background:#eeeaf5;color:#17131f}
+.wallet-button:hover,.create-button:hover,.black-button:hover{background:#d9d1e9}
+.wallet-button.connected{background:#1e1928;color:#d8d0e8;border:1px solid #393043}
+.connection-dot{background:#8bdcb8}
+.hero h1{color:#f2eff7}.deposit-form{background:rgba(17,15,23,.96);border-color:#3a3245;box-shadow:0 0 35px #6e3dba09}
+.deposit-form:focus-within{border-color:#8c6ab9;box-shadow:0 0 0 4px #9c73e00d,0 0 35px #6e3dba0d}
+.deposit-form>input{color:#f0ebf8}.deposit-form>input::placeholder{color:#7e758a}
+.asset-select{background:#241e2e;border-color:#393143}.asset-select select{color:#e5ddeb}.asset-select>svg{color:#9687aa}.asset-select option{background:#201a2a;color:#e7e0ef}
+.deposit-submit{background:#e9e2f5;color:#1b1129;border-color:#e9e2f5}.deposit-submit:hover{background:#d1bced}
+.deposit-help{color:#8b819a}.deposit-help strong{color:#bcb1ca}.help-dot{color:#665974}
+.tabs button{color:#7c7489}.tabs button.active,.tabs button:hover{color:#eee8f6}.tabs button span{background:#211c2b;color:#9c8ead}.tabs button.active span{background:#30263d;color:#c8b5df}
+.lobby{margin-bottom:60px}.duel-panel{background:rgba(17,15,23,.97);border-color:#302839;box-shadow:0 12px 65px #00000015}
+.table-toolbar{background:#18131f}.table-toolbar h2{color:#a99caf}.live-dot{background:#78ceaa;box-shadow:0 0 0 3px #78ceaa0c}
+.filter-divider{background:#3a3045}.select-wrap select{color:#a699b8}.select-wrap svg{color:#897a9b}.select-wrap option{background:#201a2a}
+.duel-head{background:#15111c;border-color:#292131;color:#776a89}.duel-row{border-color:#292131}.duel-row:hover{background:#1a1423}
+.trader-address{color:#dbd3e5}.trader-meta{color:#7c6e8e}.avatar{border-color:#ffffff08}
+.avatar-0{background:#30243e}.avatar-0>span{background:#7d609a}.avatar-0>i{background:#ac88ce}
+.avatar-1{background:#392720}.avatar-1>span{background:#805443}.avatar-1>i{background:#c38a6d}
+.avatar-2{background:#263024}.avatar-2>span{background:#5b714e}.avatar-2>i{background:#99b47c}
+.avatar-3{background:#212c3b}.avatar-3>span{background:#4b6586}.avatar-3>i{background:#83a6d2}
+.avatar-4{background:#39232f}.avatar-4>span{background:#845768}.avatar-4>i{background:#c2849c}
+.stake-cell{color:#ddd3eb}.currency-label{color:#82718f}.token-mon{background:#8d73d2;color:white}.token-sol{background:#28232f;color:#b4e2c7}.token-eth{background:#2c2835;color:#c3bbd5}
+.position.long{background:#142b25;color:#68c6a3}.position.short{background:#321e28;color:#d98d9c}.versus{color:#6f617c}.open-position{border-color:#4c3c5c;color:#8e7d9d}
+.duration-cell{color:#9b8ba9}.duration-cell svg{color:#776485}.prize-cell{color:#e4d9ef}.prize-cell>span{color:#8a779a}
+.join-button{border-color:#4a3a59;color:#c6b7d6;background:#21192b}.join-button:hover{border-color:#b79acf;background:#b79acf;color:#1b1129}.join-button.joined{color:#9b89ad}
+.table-footer{background:#15111b;border-color:#292131;color:#7a6b8a}.mini-dot{background:#a38bbd}
+.site-footer{background:transparent;border-color:#302638;color:#74667f;min-height:92px}.footer-brand{color:#a896ba}.site-footer button{color:#9b85ad}.site-footer button:hover{color:#e1cdef}.demo-label{background:#261c31;color:#a48ab9}
+.empty-state{color:#b297cc}.empty-state h3{color:#dbcae8}.empty-state p{color:#94819f}
+.modal{background:#16111d;border-color:#3d304a;color:#ece2f5;box-shadow:0 30px 110px #0009}.modal::backdrop{background:#030205aa;backdrop-filter:blur(7px)}
+.modal-copy{color:#a190ae}.modal-header h2{color:#ece2f5}.icon-button{background:#2a2036;color:#ac95bf}.icon-button:hover{background:#3c2c4c;color:#eee2fa}
+.modal-brand{background:#2a1d38;color:#c5a5e2}.wallet-option{border-color:#4b375c;background:#201628;color:#ecdef5}.wallet-option:hover{background:#2b1e36;border-color:#8860a2}.wallet-option-icon{background:#3b2550;color:#c6a0ed}.wallet-option small,.wallet-option>svg{color:#a88bbd}
+.modal-footnote{color:#8f779f}.deposit-confirm>span:last-child>span{color:#ab8ebd}.summary{border-color:#3b2a47}.summary dt{color:#a589b6}.summary dd{color:#e8d7f2}.account-id{color:#dfc9ed}.balance-list dd,.balance-list dt{color:#e3cdef}
+.disconnect-button{color:#af8ac2}.disconnect-button:hover{color:#e499ac}.rules-list>li>span{border-color:#4f335e;color:#b38ac5}.rules-list h3{color:#ead1f6}.rules-list p{color:#ae8dbd}
+.info-note{background:#2b1b36;color:#b897c7}.field-label{color:#b592c6}.create-stake{border-color:#583969;background:#1c1125}.create-stake>input{color:#ecd7f8}.create-stake .asset-select{background:#382047}.field-help{color:#a780ba}.form-select{background:#21132c;border-color:#583969;color:#dfc0ee}
+.side-options button{background:#24142f;border-color:#583969;color:#ac85bf}.side-options .chosen.long{background:#182e29;color:#8fdcbb;border-color:#41695b}.side-options .chosen.short{background:#38212e;color:#eca2b4;border-color:#794557}
+.form-error{background:#3b202e;color:#eba0b5}.match-preview strong{color:#e0c4ef}.match-vs{color:#9a70ac}.challenger{background:#2b1838;color:#be92d2;border-color:#725084}.deposit-link{color:#c595e0}.toast{background:#211329;border-color:#573464;color:#e5c6f2;box-shadow:0 12px 50px #0006}.toast-check{background:#1c392e;color:#94ddb9}.toast>button{color:#b88cca}
+.deposit-help.error{color:#e598af}.deposit-form.has-error{border-color:#a86079}
+@media(max-width:640px){.lobby{margin-bottom:35px}.site-footer{min-height:81px}.terminal-background{opacity:.55}}
+@media(prefers-reduced-motion:reduce){.terminal-background{opacity:.45}}
+
+/* Bring the arena into the first screen, especially on shorter laptops. */
+.hero{padding-top:42px;margin-bottom:28px}
+.deposit-form{margin-top:28px}
+.deposit-help{margin-top:12px}
+.lobby-toolbar{margin-bottom:16px}
+.table-toolbar{min-height:54px;padding-top:12px;padding-bottom:12px}
+.duel-head{height:34px}
+.duel-row{min-height:74px}
+@media(min-width:1600px){.hero{padding-top:50px;margin-bottom:32px}.deposit-form{margin-top:30px}.hero .deposit-help{margin-top:12px}.duel-row{min-height:78px}}
+@media(max-width:640px){.hero{padding-top:38px;margin-bottom:32px}.deposit-form{margin-top:27px}.duel-row{min-height:74px}}
+
+.hero{padding-top:28px;margin-bottom:24px}
+.hero h1{font-size:72px;font-weight:780;line-height:1;letter-spacing:-3.8px;text-shadow:0 2px 20px #c08df00a}
+.join-button{position:relative;isolation:isolate;height:35px;border-radius:9px;border:1px solid #f3d9ff;border-bottom-color:#ad79d2;background:linear-gradient(180deg,#f6e1ff 0%,#ddb9fb 48%,#c493ed 100%);color:#321342;font-weight:700;letter-spacing:.05px;box-shadow:inset 0 1px 0 #fff9,inset 0 -1px 0 #9c5acb55,0 4px 0 #654080,0 7px 18px #c98df326;transform:translateY(-1px);transition:transform .15s,box-shadow .15s,background .15s,border-color .15s}
+.join-button:not(.joined)::before{content:'';position:absolute;inset:1px 1px 50%;z-index:-1;pointer-events:none;border-radius:7px 7px 11px 11px;background:linear-gradient(180deg,#ffffff35,#ffffff05)}
+.join-button:hover{background:linear-gradient(180deg,#fff2ff,#ebceff 50%,#d5aaf7);border-color:#fff0ff;color:#2b0e3b;transform:translateY(-2px);box-shadow:inset 0 1px 0 #fffc,0 5px 0 #775093,0 8px 22px #ce9aff38}
+.join-button:active{transform:translateY(3px);box-shadow:inset 0 1px 3px #8450a54d,0 0 0 #654080}
+.join-button>svg{stroke-width:2}
+.join-button.joined{background:linear-gradient(180deg,#372a40,#2b2033);color:#b8a6c6;border-color:#51405d;box-shadow:inset 0 1px 0 #dfc9f20a,0 3px 0 #1b1123}
+.create-stake .currency-picker-trigger{height:35px;min-width:108px;border:0;border-radius:9px}
+@media(min-width:1600px){.hero{padding-top:34px;margin-bottom:30px}.hero h1{font-size:82px;letter-spacing:-4.4px}}
+@media(max-width:640px){.hero{padding-top:26px;margin-bottom:32px}.hero h1{font-size:56px;letter-spacing:-2.7px}.join-button{height:33px;font-size:10px}.currency-picker-trigger{min-width:99px}.deposit-form{padding-left:18px}}
+
+.deposit-usd{flex-shrink:0;max-width:156px;min-width:68px;padding:0 8px 0 3px;text-align:right;font-size:13px;font-weight:450;letter-spacing:-.2px;color:#b7a2c9;white-space:nowrap;font-variant-numeric:tabular-nums}
+.deposit-usd.is-unavailable{font-size:10px;color:#86778f;letter-spacing:0}
+@media(max-width:640px){.deposit-form{column-gap:5px}.deposit-usd{font-size:10px;min-width:53px;max-width:105px;padding:0 4px 0 0}.deposit-usd.is-unavailable{font-size:8px}.deposit-form>input::placeholder{font-size:12px}.deposit-form .currency-picker-trigger{min-width:90px;padding:0 7px;gap:5px}.deposit-form>input{font-size:17px}}
